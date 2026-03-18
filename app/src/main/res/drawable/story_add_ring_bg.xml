@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/story_add_ring_bg.xml - soft gradient bg for the + story circle -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:startColor="#E1F6F4"
+        android:endColor="#F5C8C6"
+        android:angle="135"
+        android:type="linear" />
+</shape>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph_main"
+    app:startDestination="@id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.apollo.socially.ui.home.HomeFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_postDetail"
+            app:destination="@id/postDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_home_to_notifications"
+            app:destination="@id/notificationsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_home_to_storyViewer"
+            app:destination="@id/storyViewerFragment"
+            app:enterAnim="@anim/story_slide_up_enter"
+            app:exitAnim="@anim/story_slide_down_exit"
+            app:popEnterAnim="@anim/story_slide_up_enter"
+            app:popExitAnim="@anim/story_slide_down_exit" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_messages"
+        android:name="com.apollo.socially.ui.messages.MessagesFragment"
+        android:label="Messages" />
+
+    <fragment
+        android:id="@+id/navigation_create"
+        android:name="com.apollo.socially.ui.create.CreatePostFragment"
+        android:label="Create" />
+
+    <fragment
+        android:id="@+id/navigation_favorites"
+        android:name="com.apollo.socially.ui.favorites.FavoritesFragment"
+        android:label="Favorites" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.apollo.socially.ui.profile.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_profile_to_postDetail"
+            app:destination="@id/postDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.apollo.socially.ui.profile.SettingsFragment"
+        android:label="Settings" />
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.apollo.socially.ui.post.PostDetailFragment"
+        android:label="Post" />
+
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.apollo.socially.ui.home.NotificationsFragment"
+        android:label="Activity" />
+
+    <fragment
+        android:id="@+id/storyViewerFragment"
+        android:name="com.apollo.socially.ui.story.StoryViewerFragment"
+        android:label="Story" />
+
+</navigation>

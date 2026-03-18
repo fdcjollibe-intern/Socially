@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/item_story.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:layout_marginEnd="12dp">
+
+    <!-- Story ring + avatar -->
+    <FrameLayout
+        android:layout_width="64dp"
+        android:layout_height="64dp">
+
+        <!-- Teal ring background (hidden for "add story") -->
+        <View
+            android:id="@+id/story_ring"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/story_ring_bg" />
+
+        <!-- Avatar -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/story_avatar"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:src="@drawable/user_profile_placeholder_avatar"
+            app:civ_border_color="@color/white"
+            app:civ_border_width="2dp" />
+
+        <!-- Add icon overlay (only visible for "my story") -->
+        <ImageView
+            android:id="@+id/story_add_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/story_add_btn_bg"
+            android:padding="3dp"
+            android:src="@drawable/home_ic_plus"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </FrameLayout>
+
+    <!-- Username -->
+    <TextView
+        android:id="@+id/story_username"
+        android:layout_width="64dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/black"
+        android:textSize="11sp"
+        tools:text="yourname" />
+
+</LinearLayout>

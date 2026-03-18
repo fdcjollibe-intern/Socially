@@ -1,17 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    activity_register.xml
-    Fonts: res/font/poppins_regular, poppins_medium, poppins_bold
-    Drawables needed:
-      - default_bg        (your AVIF background)
-      - ic_logo           (app logo icon)
-      - ic_user           (person/user icon)
-      - ic_email          (envelope icon)
-      - ic_lock           (lock icon)
-      - ic_eye_off        (eye-slash icon)
-      - bg_input_field    (see bg_input_field.xml)
-      - bg_button_primary (see bg_button_primary.xml)
--->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -114,17 +101,17 @@
                         android:fontFamily="@font/poppins_regular"
                         android:layout_marginBottom="24dp" />
 
-                    <!-- Full Name Label -->
+                    <!-- First Name Label -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Full Name"
+                        android:text="First Name"
                         android:textSize="12sp"
                         android:textColor="#0D0D0D"
                         android:fontFamily="@font/poppins_medium"
                         android:layout_marginBottom="8dp" />
 
-                    <!-- Full Name Input -->
+                    <!-- First Name Input -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="54dp"
@@ -143,17 +130,106 @@
                             android:layout_marginEnd="10dp" />
 
                         <EditText
-                            android:id="@+id/etFullName"
+                            android:id="@+id/etFirstName"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:background="@null"
-                            android:hint="John Doe"
-                            android:hintTextColor="#CCCCCC"
+                            android:hint="John"
+                            android:textColorHint="#CCCCCC"
                             android:textColor="#0D0D0D"
                             android:textSize="13sp"
                             android:fontFamily="@font/poppins_regular"
                             android:inputType="textPersonName|textCapWords"
+                            android:singleLine="true"
+                            android:imeOptions="actionNext" />
+                    </LinearLayout>
+
+                    <!-- Last Name Label -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Last Name"
+                        android:textSize="12sp"
+                        android:textColor="#0D0D0D"
+                        android:fontFamily="@font/poppins_medium"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Last Name Input -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_input_field"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_user"
+                            android:alpha="0.45"
+                            android:layout_marginEnd="10dp" />
+
+                        <EditText
+                            android:id="@+id/etLastName"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="Doe"
+                            android:textColorHint="#CCCCCC"
+                            android:textColor="#0D0D0D"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/poppins_regular"
+                            android:inputType="textPersonName|textCapWords"
+                            android:singleLine="true"
+                            android:imeOptions="actionNext" />
+                    </LinearLayout>
+
+                    <!-- Username Label -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Username"
+                        android:textSize="12sp"
+                        android:textColor="#0D0D0D"
+                        android:fontFamily="@font/poppins_medium"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Username Input -->
+                    <LinearLayout
+                        android:id="@+id/llUsername"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_input_field"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_user"
+                            android:alpha="0.45"
+                            android:layout_marginEnd="10dp" />
+
+                        <EditText
+                            android:id="@+id/etUsername"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="johndoe"
+                            android:textColorHint="#CCCCCC"
+                            android:textColor="#0D0D0D"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/poppins_regular"
+                            android:inputType="text"
                             android:singleLine="true"
                             android:imeOptions="actionNext" />
                     </LinearLayout>
@@ -170,6 +246,7 @@
 
                     <!-- Email Input -->
                     <LinearLayout
+                        android:id="@+id/llEmail"
                         android:layout_width="match_parent"
                         android:layout_height="54dp"
                         android:orientation="horizontal"
@@ -193,7 +270,7 @@
                             android:layout_weight="1"
                             android:background="@null"
                             android:hint="hello@example.com"
-                            android:hintTextColor="#CCCCCC"
+                            android:textColorHint="#CCCCCC"
                             android:textColor="#0D0D0D"
                             android:textSize="13sp"
                             android:fontFamily="@font/poppins_regular"
@@ -237,7 +314,7 @@
                             android:layout_weight="1"
                             android:background="@null"
                             android:hint="Create a password"
-                            android:hintTextColor="#CCCCCC"
+                            android:textColorHint="#CCCCCC"
                             android:textColor="#0D0D0D"
                             android:textSize="13sp"
                             android:fontFamily="@font/poppins_regular"
@@ -290,7 +367,7 @@
                             android:layout_weight="1"
                             android:background="@null"
                             android:hint="Repeat your password"
-                            android:hintTextColor="#CCCCCC"
+                            android:textColorHint="#CCCCCC"
                             android:textColor="#0D0D0D"
                             android:textSize="13sp"
                             android:fontFamily="@font/poppins_regular"

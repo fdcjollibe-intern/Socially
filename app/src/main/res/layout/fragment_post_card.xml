@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/white">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp">
+            <de.hdodenhof.circleimageview.CircleImageView android:id="@+id/post_card_avatar" android:layout_width="42dp" android:layout_height="42dp" android:src="@drawable/user_profile_placeholder_avatar" app:civ_border_color="@color/accent" app:civ_border_width="2dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+            <LinearLayout android:id="@+id/post_card_name_row" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="center_vertical" android:orientation="horizontal" app:layout_constraintEnd_toStartOf="@id/post_card_options" app:layout_constraintStart_toEndOf="@id/post_card_avatar" app:layout_constraintTop_toTopOf="@id/post_card_avatar">
+                <TextView android:id="@+id/post_card_username" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/black" android:textSize="14sp" android:textStyle="bold" tools:text="mindcast" />
+                <ImageView android:id="@+id/post_card_verified" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginStart="4dp" android:src="@drawable/user_profile_ic_verified" android:visibility="gone" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/post_card_music_row" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone" app:layout_constraintEnd_toStartOf="@id/post_card_options" app:layout_constraintStart_toEndOf="@id/post_card_avatar" app:layout_constraintTop_toBottomOf="@id/post_card_name_row">
+                <ImageView android:layout_width="11dp" android:layout_height="11dp" android:src="@drawable/post_card_ic_music" app:tint="@color/gray" />
+                <TextView android:id="@+id/post_card_music_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" android:ellipsize="end" android:maxLines="1" android:textColor="@color/gray" android:textSize="11sp" />
+            </LinearLayout>
+            <ImageButton android:id="@+id/post_card_options" android:layout_width="36dp" android:layout_height="36dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="6dp" android:src="@drawable/post_card_ic_options" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <ImageView android:id="@+id/post_card_image" android:layout_width="0dp" android:layout_height="0dp" android:scaleType="centerCrop" android:src="@drawable/sample_photo" app:layout_constraintDimensionRatio="H,1:1" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="10dp">
+            <ImageButton android:id="@+id/post_card_btn_like" android:layout_width="36dp" android:layout_height="36dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/post_card_ic_heart" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+            <ImageButton android:id="@+id/post_card_btn_comment" android:layout_width="36dp" android:layout_height="36dp" android:layout_marginStart="4dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/post_card_ic_comment" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toEndOf="@id/post_card_btn_like" app:layout_constraintTop_toTopOf="parent" />
+            <ImageButton android:id="@+id/post_card_btn_share" android:layout_width="36dp" android:layout_height="36dp" android:layout_marginStart="4dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/post_card_ic_send" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toEndOf="@id/post_card_btn_comment" app:layout_constraintTop_toTopOf="parent" />
+            <ImageButton android:id="@+id/post_card_btn_emoji" android:layout_width="36dp" android:layout_height="36dp" android:layout_marginStart="4dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/post_card_ic_emoji" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toEndOf="@id/post_card_btn_share" app:layout_constraintTop_toTopOf="parent" />
+            <LinearLayout android:id="@+id/post_card_likes_row" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent">
+                <FrameLayout android:layout_width="44dp" android:layout_height="24dp">
+                    <de.hdodenhof.circleimageview.CircleImageView android:id="@+id/post_card_liked_avatar_2" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="end" android:src="@drawable/user_profile_placeholder_avatar" app:civ_border_color="@color/white" app:civ_border_width="1.5dp" />
+                    <de.hdodenhof.circleimageview.CircleImageView android:id="@+id/post_card_liked_avatar_1" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="start" android:src="@drawable/user_profile_placeholder_avatar" app:civ_border_color="@color/white" app:civ_border_width="1.5dp" />
+                </FrameLayout>
+                <TextView android:id="@+id/post_card_like_count" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:textColor="@color/black" android:textSize="13sp" android:textStyle="bold" tools:text="107k Liked" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView android:id="@+id/post_card_time_ago" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginTop="2dp" android:textColor="@color/gray" android:textSize="11sp" tools:text="12h ago" />
+        <TextView android:id="@+id/post_card_liked_by_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginTop="2dp" android:textColor="@color/gray" android:textSize="12sp" />
+        <TextView android:id="@+id/post_card_caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginTop="4dp" android:layout_marginBottom="14dp" android:ellipsize="end" android:maxLines="2" android:textColor="@color/black" android:textSize="13sp" />
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/item_notification.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <!-- Avatar -->
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/notif_avatar"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:src="@drawable/user_profile_placeholder_avatar"
+        app:civ_border_color="@color/gray_border"
+        app:civ_border_width="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Message -->
+    <TextView
+        android:id="@+id/notif_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/black"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/notif_action_container"
+        app:layout_constraintStart_toEndOf="@id/notif_avatar"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="stringsmickey02 just shared a new reel. 1d" />
+
+    <!-- Right side: either a thumbnail OR a "Follow back" button -->
+    <FrameLayout
+        android:id="@+id/notif_action_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Post thumbnail -->
+        <ImageView
+            android:id="@+id/notif_thumbnail"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@color/main"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- Follow back button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/notif_btn_follow_back"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Follow back"
+            android:textSize="12sp"
+            app:backgroundTint="@color/accent"
+            app:cornerRadius="8dp"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
