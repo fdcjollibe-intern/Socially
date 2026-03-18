@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Socially</string>
+    <!-- Replace the value below with the OAuth2 client ID from Firebase console -->
+    <string name="default_web_client_id">REPLACE_WITH_CLIENT_ID</string>
 </resources>

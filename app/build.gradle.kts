@@ -62,6 +62,9 @@ dependencies {
     // Coroutines Android dispatcher
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
+    // Google Sign-In (for Firebase Authentication via Google)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
 
 
 
