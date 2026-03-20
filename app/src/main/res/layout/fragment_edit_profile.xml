@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/fragment_edit_profile.xml -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <!-- Toolbar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:elevation="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="12dp">
+
+            <ImageButton
+                android:id="@+id/edit_profile_btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="12dp"
+                android:src="@drawable/user_profile_ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="Edit profile"
+                android:textColor="@color/black"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/edit_profile_btn_save"
+                app:layout_constraintStart_toEndOf="@id/edit_profile_btn_back"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/edit_profile_btn_save"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:enabled="false"
+                android:text="Save"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                app:backgroundTint="@color/accent"
+                app:cornerRadius="18dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/gray_border" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ── AVATAR SECTION ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingTop="24dp"
+                android:paddingBottom="16dp">
+
+                <FrameLayout
+                    android:id="@+id/edit_profile_avatar_container"
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/edit_profile_avatar"
+                        android:layout_width="88dp"
+                        android:layout_height="88dp"
+                        android:src="@drawable/user_profile_placeholder_avatar"
+                        app:civ_border_color="@color/gray_border"
+                        app:civ_border_width="1dp" />
+
+                    <!-- Upload progress overlay -->
+                    <FrameLayout
+                        android:id="@+id/edit_profile_avatar_progress_overlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#88000000"
+                        android:visibility="gone">
+
+                        <ProgressBar
+                            android:id="@+id/edit_profile_avatar_spinner"
+                            style="@style/Widget.AppCompat.ProgressBar"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:indeterminateTint="@color/white" />
+
+                    </FrameLayout>
+
+                    <!-- Camera badge -->
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/story_add_btn_bg"
+                        android:padding="5dp"
+                        android:src="@drawable/picker_ic_camera" />
+
+                </FrameLayout>
+
+                <!-- Upload % text -->
+                <TextView
+                    android:id="@+id/edit_profile_upload_percent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/accent"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/edit_profile_change_photo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="Edit picture"
+                    android:textColor="@color/accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_border" />
+
+            <!-- ── NAME ROW ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+
+                <TextView
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:text="Name"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_profile_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:hint="Display name"
+                    android:inputType="textPersonName|textCapWords"
+                    android:maxLines="1"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_border" />
+
+            <!-- ── USERNAME ROW ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+
+                <TextView
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:text="Username"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edit_profile_username"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:hint="username"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/gray"
+                        android:textSize="14sp" />
+
+                    <!-- Availability status -->
+                    <TextView
+                        android:id="@+id/edit_profile_username_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="11sp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+                <!-- Availability icon -->
+                <ImageView
+                    android:id="@+id/edit_profile_username_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_border" />
+
+            <!-- ── BIO ROW ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="top"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Bio"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edit_profile_bio"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:gravity="top"
+                        android:hint="Bio"
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:maxLines="6"
+                        android:minLines="2"
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/gray"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/edit_profile_bio_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="2dp"
+                        android:text="0 / 150"
+                        android:textColor="@color/gray"
+                        android:textSize="11sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_border" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

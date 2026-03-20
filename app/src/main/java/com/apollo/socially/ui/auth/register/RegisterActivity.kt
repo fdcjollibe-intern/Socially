@@ -29,8 +29,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var viewModel: RegisterViewModel
     private lateinit var sessionRepository: SessionRepositoryImpl
-    private lateinit var etFirstName: EditText
-    private lateinit var etLastName: EditText
+    private lateinit var etDisplayName: EditText
     private lateinit var etUsername: EditText
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
@@ -47,87 +46,65 @@ class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
-
-        initializeViewModel()
+        val repository = AuthRepositoryImpl(FirebaseAuth.getInstance(), FirebaseFirestore.getInstance())
+        val database = AppDatabase.getInstance(this)
+        sessionRepository = SessionRepositoryImpl(database.userSessionDao())
+        viewModel = ViewModelProvider(this, ViewModelFactory(repository))[RegisterViewModel::class.java]
         initializeViews()
         setupClickListeners()
         observeViewModel()
     }
 
-    private fun initializeViewModel() {
-        val repository = AuthRepositoryImpl(
-            FirebaseAuth.getInstance(),
-            FirebaseFirestore.getInstance()
-        )
-        val database = AppDatabase.getInstance(this)
-        sessionRepository = SessionRepositoryImpl(database.userSessionDao())
-        val factory = ViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory)[RegisterViewModel::class.java]
-    }
-
     private fun initializeViews() {
-        etFirstName = findViewById(R.id.etFirstName)
-        etLastName = findViewById(R.id.etLastName)
-        etUsername = findViewById(R.id.etUsername)
-        etEmail = findViewById(R.id.etEmail)
-        etPassword = findViewById(R.id.etPassword)
-        etConfirmPassword = findViewById(R.id.etConfirmPassword)
-        btnRegister = findViewById(R.id.btnRegister)
-        ivTogglePassword = findViewById(R.id.ivTogglePassword)
+        etDisplayName       = findViewById(R.id.etDisplayName)
+        etUsername          = findViewById(R.id.etUsername)
+        etEmail             = findViewById(R.id.etEmail)
+        etPassword          = findViewById(R.id.etPassword)
+        etConfirmPassword   = findViewById(R.id.etConfirmPassword)
+        btnRegister         = findViewById(R.id.btnRegister)
+        ivTogglePassword    = findViewById(R.id.ivTogglePassword)
         ivToggleConfirmPassword = findViewById(R.id.ivToggleConfirmPassword)
-        tvLogin = findViewById(R.id.tvLogin)
-        llEmail = findViewById(R.id.llEmail)
-        llUsername = findViewById(R.id.llUsername)
+        tvLogin             = findViewById(R.id.tvLogin)
+        llEmail             = findViewById(R.id.llEmail)
+        llUsername          = findViewById(R.id.llUsername)
     }
 
     private fun setupClickListeners() {
         btnRegister.setOnClickListener {
             resetFieldBorders()
-            val firstName = etFirstName.text.toString().trim()
-            val lastName = etLastName.text.toString().trim()
-            val username = etUsername.text.toString().trim()
-            val email = etEmail.text.toString().trim()
-            val password = etPassword.text.toString()
-            val confirmPassword = etConfirmPassword.text.toString()
-            viewModel.register(firstName, lastName, username, email, password, confirmPassword)
+            viewModel.register(
+                displayName     = etDisplayName.text.toString().trim(),
+                username        = etUsername.text.toString().trim(),
+                email           = etEmail.text.toString().trim(),
+                password        = etPassword.text.toString(),
+                confirmPassword = etConfirmPassword.text.toString()
+            )
         }
-
-        ivTogglePassword.setOnClickListener {
-            togglePasswordVisibility()
-        }
-
-        ivToggleConfirmPassword.setOnClickListener {
-            toggleConfirmPasswordVisibility()
-        }
-
-        tvLogin.setOnClickListener {
-            finish()
-        }
+        ivTogglePassword.setOnClickListener { togglePasswordVisibility() }
+        ivToggleConfirmPassword.setOnClickListener { toggleConfirmPasswordVisibility() }
+        tvLogin.setOnClickListener { finish() }
     }
 
     private fun togglePasswordVisibility() {
         isPasswordVisible = !isPasswordVisible
-        if (isPasswordVisible) {
-            etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-        } else {
-            etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
+        etPassword.inputType = if (isPasswordVisible)
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+        else
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         etPassword.setSelection(etPassword.text.length)
     }
 
     private fun toggleConfirmPasswordVisibility() {
         isConfirmPasswordVisible = !isConfirmPasswordVisible
-        if (isConfirmPasswordVisible) {
-            etConfirmPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-        } else {
-            etConfirmPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
+        etConfirmPassword.inputType = if (isConfirmPasswordVisible)
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+        else
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         etConfirmPassword.setSelection(etConfirmPassword.text.length)
     }
 
     private fun setFieldBorderColor(layout: LinearLayout, color: Int) {
-        val drawable = layout.background as? GradientDrawable
-        drawable?.setStroke(3, ContextCompat.getColor(this, color))
+        (layout.background as? GradientDrawable)?.setStroke(3, ContextCompat.getColor(this, color))
     }
 
     private fun resetFieldBorders() {
@@ -150,7 +127,7 @@ class RegisterActivity : AppCompatActivity() {
                     is RegisterState.Success -> {
                         btnRegister.isEnabled = true
                         Toast.makeText(this@RegisterActivity, "Registration successful!", Toast.LENGTH_SHORT).show()
-                        saveUserSessionAndNavigate(state.user)
+                        saveSessionAndNavigate(state.user)
                     }
                     is RegisterState.EmailTaken -> {
                         btnRegister.isEnabled = true
@@ -176,22 +153,14 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
     }
-    
-    private fun saveUserSessionAndNavigate(user: User) {
+
+    private fun saveSessionAndNavigate(user: User) {
         lifecycleScope.launch {
-            // Save user session to Room database
             sessionRepository.saveUserSession(user)
-            
-            // Navigate to main screen
-            navigateToMain()
+            val intent = Intent(this@RegisterActivity, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
     }
-
-    private fun navigateToMain() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
 }
-

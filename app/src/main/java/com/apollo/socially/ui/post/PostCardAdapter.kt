@@ -11,6 +11,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.apollo.socially.R
 import com.apollo.socially.databinding.ItemPostCardBinding
 import com.apollo.socially.model.PostModel
+import com.bumptech.glide.Glide
 
 class PostCardAdapter(
     private val onSeeMoreClick: (PostModel) -> Unit,
@@ -38,6 +39,13 @@ class PostCardAdapter(
                 if (post.isVerified) View.VISIBLE else View.GONE
 
             post.userAvatarRes?.let { binding.postCardAvatar.setImageResource(it) }
+            if (!post.userAvatarUrl.isNullOrBlank()) {
+                Glide.with(binding.root.context)
+                    .load(post.userAvatarUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.user_profile_placeholder_avatar)
+                    .into(binding.postCardAvatar)
+            }
 
             if (!post.musicLabel.isNullOrBlank()) {
                 binding.postCardMusicRow.visibility = View.VISIBLE
@@ -46,30 +54,41 @@ class PostCardAdapter(
                 binding.postCardMusicRow.visibility = View.GONE
             }
 
-            val images = post.images
+            val urls = post.imageUrls   // ← use URL list (always populated from Firebase)
 
-            if (images.size >= 2) {
-                // ── MULTI-IMAGE: show ViewPager2, hide single ImageView ──
+            if (urls.size >= 2) {
+                // MULTI-IMAGE: ViewPager2 with URL-based pager adapter
                 binding.postCardSingleContainer.visibility = View.GONE
                 binding.postCardPagerContainer.visibility = View.VISIBLE
 
-                val pagerAdapter = PostImagePagerAdapter(images)
+                val pagerAdapter = PostImageUrlPagerAdapter(urls)
                 binding.postCardViewPager.adapter = pagerAdapter
 
-                // Build dot indicators
-                setupDots(images.size, 0)
+                setupDots(urls.size, 0)
                 binding.postCardViewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                     override fun onPageSelected(position: Int) {
-                        setupDots(images.size, position)
+                        setupDots(urls.size, position)
                     }
                 })
-
-            } else {
-                // ── SINGLE IMAGE ──
+            } else if (urls.size == 1) {
+                // SINGLE IMAGE from URL
                 binding.postCardSingleContainer.visibility = View.VISIBLE
                 binding.postCardPagerContainer.visibility = View.GONE
                 binding.postCardDotsContainer.visibility = View.GONE
-                images.firstOrNull()?.let { binding.postCardImage.setImageResource(it) }
+
+                Glide.with(binding.root.context)
+                    .load(urls[0])
+                    .centerCrop()
+                    .placeholder(R.drawable.sample_photo)
+                    .error(R.drawable.sample_photo)
+                    .into(binding.postCardImage)
+            } else {
+                // Fallback: static resource (legacy/sample data)
+                val resImages = post.images
+                binding.postCardSingleContainer.visibility = View.VISIBLE
+                binding.postCardPagerContainer.visibility = View.GONE
+                binding.postCardDotsContainer.visibility = View.GONE
+                resImages.firstOrNull()?.let { binding.postCardImage.setImageResource(it) }
             }
 
             binding.postCardSeeMore.setOnClickListener { onSeeMoreClick(post) }

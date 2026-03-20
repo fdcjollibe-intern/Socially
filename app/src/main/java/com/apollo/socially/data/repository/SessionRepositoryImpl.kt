@@ -8,31 +8,31 @@ import com.apollo.socially.domain.repository.ISessionRepository
 class SessionRepositoryImpl(
     private val userSessionDao: UserSessionDao
 ) : ISessionRepository {
-    
+
     override suspend fun saveUserSession(user: User) {
         val session = UserSessionEntity(
             uid = user.uid,
             email = user.email,
-            firstName = user.firstName,
-            lastName = user.lastName,
+            displayName = user.displayName,
             username = user.username,
+            bio = user.bio,
             profileImageUrl = user.profileImageUrl,
+            profileCoverUrl = user.profileCoverUrl,
             isLoggedIn = true,
             lastLoginTimestamp = System.currentTimeMillis()
         )
         userSessionDao.insertUserSession(session)
     }
-    
+
     override suspend fun getUserSession(): UserSessionEntity? {
         return userSessionDao.getLoggedInUser()
     }
-    
+
     override suspend fun isUserLoggedIn(): Boolean {
         return userSessionDao.isUserLoggedIn()
     }
-    
+
     override suspend fun clearSession() {
         userSessionDao.clearAllSessions()
     }
 }
-

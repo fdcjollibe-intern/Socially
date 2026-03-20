@@ -19,9 +19,9 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:paddingStart="16dp"
-            android:paddingEnd="10dp">
+            android:paddingEnd="10dp"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
-            <!-- App name center -->
             <TextView
                 android:id="@+id/home_app_name"
                 android:layout_width="wrap_content"
@@ -36,9 +36,8 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Heart / notification icon -->
             <ImageButton
                 android:id="@+id/home_btn_notifications"
                 android:layout_width="40dp"
@@ -51,6 +50,130 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- ── UPLOAD PROGRESS BANNER — hidden when idle ── -->
+        <LinearLayout
+            android:id="@+id/home_upload_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FAFAFA"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:id="@+id/home_upload_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Uploading post…"
+                    android:textColor="@color/gray"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/home_upload_percent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textColor="@color/accent"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/home_upload_progress"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/accent" />
+
+        </LinearLayout>
+
+        <!-- ── SUCCESS BANNER — shown on upload success ── -->
+        <LinearLayout
+            android:id="@+id/home_success_banner"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="#EEFFF0"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Post uploaded successfully!"
+                android:textColor="#4CAF50"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/home_success_dismiss"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp"
+                android:text="Dismiss"
+                android:textColor="@color/gray"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- ── RETRY BANNER — shown on upload failure ── -->
+        <LinearLayout
+            android:id="@+id/home_retry_banner"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="#FFEEEE"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Post failed to upload"
+                android:textColor="@color/red"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/home_retry_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp"
+                android:text="Retry"
+                android:textColor="@color/accent"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/home_retry_dismiss"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp"
+                android:text="Dismiss"
+                android:textColor="@color/gray"
+                android:textSize="12sp" />
+
+        </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 

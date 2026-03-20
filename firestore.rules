@@ -2,7 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if username is valid
     function isValidUsername(username) {
       return username is string
         && username.size() >= 3
@@ -10,83 +9,115 @@ service cloud.firestore {
         && username.matches('^[a-zA-Z0-9_]+$');
     }
 
-    // Users collection - users can only read/write their own data
     match /users/{userId} {
-      // Allow users to read their own document
+
+      // Read own document
       allow read: if request.auth != null && request.auth.uid == userId;
 
-      // Allow users to create their own document during registration
-      allow create: if request.auth != null && request.auth.uid == userId
-        && request.resource.data.keys().hasAll(['uid', 'email', 'firstName', 'lastName', 'username'])
+      // Also allow reading other users (needed for search, profile views)
+      allow read: if request.auth != null;
+
+      // Create on registration — uses displayName now
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'username'])
         && request.resource.data.uid == userId
         && request.resource.data.email is string
         && request.resource.data.email.matches('.+@.+[.].+')
-        && request.resource.data.firstName is string
-        && request.resource.data.firstName.size() >= 2
-        && request.resource.data.lastName is string
-        && request.resource.data.lastName.size() >= 1
-        && isValidUsername(request.resource.data.username)
-        // Username must be unique (checked in app before registration)
-        && !exists(/databases/$(database)/documents/users/$(request.resource.data.username));
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 2
+        && isValidUsername(request.resource.data.username);
 
-      // Allow users to update their own document (except uid, email, username, and createdAt)
-      allow update: if request.auth != null && request.auth.uid == userId
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'email', 'username', 'createdAt'])
-        && request.resource.data.updatedAt is timestamp;
+      // Update own document (uid, email, createdAt are immutable)
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['uid', 'email', 'createdAt']);
 
-      // Users cannot delete their own documents (admin only)
+      // No deletes
       allow delete: if false;
     }
 
-    // Posts collection (for future use)
     match /posts/{postId} {
-      // Anyone authenticated can read posts
       allow read: if request.auth != null;
 
-      // Only authenticated users can create posts
       allow create: if request.auth != null
-        && request.resource.data.authorId == request.auth.uid
-        && request.resource.data.keys().hasAll(['authorId', 'content', 'createdAt'])
-        && request.resource.data.content is string
-        && request.resource.data.content.size() > 0
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'mediaUrls', 'caption', 'likesCount', 'commentsCount', 'createdAt'])
+        && request.resource.data.userId is string
+        && request.resource.data.mediaUrls is list
+        && request.resource.data.mediaUrls.size() > 0
+        && request.resource.data.caption is string
+        && request.resource.data.likesCount == 0
+        && request.resource.data.commentsCount == 0
         && request.resource.data.createdAt is timestamp;
 
-      // Users can only update their own posts
       allow update: if request.auth != null
-        && resource.data.authorId == request.auth.uid
-        && request.resource.data.authorId == resource.data.authorId
-        && request.resource.data.updatedAt is timestamp;
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
 
-      // Users can only delete their own posts
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
     }
 
-    // Comments collection (for future use)
     match /posts/{postId}/comments/{commentId} {
-      // Anyone authenticated can read comments
       allow read: if request.auth != null;
 
-      // Only authenticated users can create comments
       allow create: if request.auth != null
-        && request.resource.data.authorId == request.auth.uid
-        && request.resource.data.keys().hasAll(['authorId', 'content', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'content', 'createdAt'])
         && request.resource.data.content is string
         && request.resource.data.content.size() > 0
         && request.resource.data.createdAt is timestamp;
 
-      // Users can only update their own comments
       allow update: if request.auth != null
-        && resource.data.authorId == request.auth.uid
-        && request.resource.data.authorId == resource.data.authorId;
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
 
-      // Users can only delete their own comments
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
     }
 
-    // Default: deny all other requests
+    // Following collection - users you follow
+    match /following/{userId}/userFollowing/{followingId} {
+      // Read your own following list
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Also allow others to read (for profile viewing)
+      allow read: if request.auth != null;
+
+      // Create: You can add someone to YOUR following list
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['userId', 'followedAt'])
+        && request.resource.data.userId == followingId
+        && request.resource.data.followedAt is timestamp;
+
+      // Delete: You can remove from YOUR following list
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Followers collection - users who follow you
+    match /followers/{userId}/userFollowers/{followerId} {
+      // Read your own followers list
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Also allow others to read (for profile viewing)
+      allow read: if request.auth != null;
+
+      // Create: Someone can add themselves to YOUR followers (when they follow you)
+      allow create: if request.auth != null
+        && request.auth.uid == followerId
+        && request.resource.data.keys().hasAll(['userId', 'followedAt'])
+        && request.resource.data.userId == followerId
+        && request.resource.data.followedAt is timestamp;
+
+      // Delete: Someone can remove themselves from YOUR followers (when they unfollow you)
+      allow delete: if request.auth != null && request.auth.uid == followerId;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
-

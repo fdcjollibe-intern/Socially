@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/fragment_create_post_caption.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <!-- Toolbar -->
+    <LinearLayout
+        android:id="@+id/caption_toolbar"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@color/white"
+        android:elevation="2dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/caption_btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:src="@drawable/user_profile_ic_back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="New Post"
+            android:textColor="@color/black"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/caption_btn_post"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Post"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:backgroundTint="@color/accent"
+            app:cornerRadius="18dp" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/caption_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/gray_border"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/caption_toolbar" />
+
+    <!-- Scrollable body -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/caption_divider">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Selected media preview strip -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/caption_media_preview_rv"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_marginBottom="16dp"
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <!-- User avatar + caption input row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:orientation="horizontal">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/user_profile_placeholder_avatar"
+                    app:civ_border_color="@color/accent"
+                    app:civ_border_width="1.5dp" />
+
+                <!-- Caption EditText — word wraps, # and @ trigger bold spans -->
+                <EditText
+                    android:id="@+id/caption_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:hint="Write a caption... use # for tags and @ for mentions"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:maxLines="20"
+                    android:minLines="4"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/gray_border" />
+
+            <!-- Character count hint -->
+            <TextView
+                android:id="@+id/caption_char_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="end"
+                android:text="0 / 2200"
+                android:textColor="@color/gray"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

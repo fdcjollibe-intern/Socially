@@ -4,7 +4,12 @@ import com.apollo.socially.domain.model.User
 import com.google.firebase.auth.AuthResult
 
 interface IAuthRepository {
-    suspend fun registerWithEmail(email: String, password: String, firstName: String, lastName: String, username: String): AuthResult
+    suspend fun registerWithEmail(
+        email: String,
+        password: String,
+        displayName: String,
+        username: String
+    ): AuthResult
     suspend fun signInWithEmail(email: String, password: String): AuthResult
     suspend fun signInWithUsername(username: String, password: String): AuthResult
     suspend fun signInWithGoogle(idToken: String): AuthResult
@@ -17,4 +22,3 @@ interface IAuthRepository {
     fun getCurrentUser(): User?
     fun signOut()
 }
-

@@ -7,6 +7,8 @@ plugins {
     
     // KSP for Room - compatible with Kotlin 2.0.21
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+
+    id("kotlin-parcelize")
 }
 
 android {
@@ -97,6 +99,18 @@ dependencies {
 
     implementation("de.hdodenhof:circleimageview:3.1.0")  // circular avatar with border
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+
+
+    // Glide — media thumbnail loading in the picker grid
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    ksp("com.github.bumptech.glide:compiler:4.16.0")
+
+    // ViewPager2 — for multi-image post swiping
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
+
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    implementation("com.github.yalantis:ucrop:2.2.8")
 
 
 }

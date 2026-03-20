@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/item_search_user.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/search_user_avatar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/user_profile_placeholder_avatar"
+        app:civ_border_color="@color/gray_border"
+        app:civ_border_width="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/search_user_follow_btn"
+        app:layout_constraintStart_toEndOf="@id/search_user_avatar"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/search_user_fullname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Luna Hayes" />
+
+            <ImageView
+                android:id="@+id/search_user_verified"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/user_profile_ic_verified"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/search_user_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            tools:text="@lunahayes" />
+
+    </LinearLayout>
+
+    <!-- Follow / Following button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/search_user_follow_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="34dp"
+        android:text="Follow"
+        android:textSize="12sp"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/accent"
+        app:cornerRadius="17dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/fragment_followers_following.xml -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:elevation="0dp">
+
+        <!-- Toolbar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="16dp">
+
+            <ImageButton
+                android:id="@+id/follow_btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="12dp"
+                android:src="@drawable/user_profile_ic_back" />
+
+            <TextView
+                android:id="@+id/follow_toolbar_username"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="yourusername" />
+
+        </LinearLayout>
+
+        <!-- Tabs -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/follow_tab_layout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            app:tabGravity="fill"
+            app:tabIndicatorColor="@color/accent"
+            app:tabSelectedTextColor="@color/black"
+            app:tabTextColor="@color/gray"
+            app:tabMode="fixed" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- ViewPager2 for tabs -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/follow_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

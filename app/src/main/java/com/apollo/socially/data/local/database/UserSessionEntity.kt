@@ -8,11 +8,11 @@ data class UserSessionEntity(
     @PrimaryKey(autoGenerate = false)
     val uid: String,
     val email: String,
-    val firstName: String,
-    val lastName: String,
+    val displayName: String,
     val username: String,
-    val profileImageUrl: String?,
+    val bio: String = "",
+    val profileImageUrl: String? = null,
+    val profileCoverUrl: String? = null,
     val isLoggedIn: Boolean = true,
     val lastLoginTimestamp: Long = System.currentTimeMillis()
 )
-

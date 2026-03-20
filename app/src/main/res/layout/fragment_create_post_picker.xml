@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/fragment_create_post_picker.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <!-- ── TOP BAR ── -->
+    <LinearLayout
+        android:id="@+id/picker_toolbar"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Close -->
+        <ImageButton
+            android:id="@+id/picker_btn_close"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:src="@drawable/user_profile_ic_back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="New Post"
+            android:textColor="@color/black"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <!-- Multi-select toggle button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/picker_btn_multi"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:text="Select multiple"
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            app:cornerRadius="18dp"
+            app:strokeColor="@color/gray_border"
+            app:strokeWidth="1dp" />
+
+        <!-- Next button (hidden until ≥1 selected) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/picker_btn_next"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Next"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:visibility="gone"
+            app:backgroundTint="@color/accent"
+            app:cornerRadius="18dp"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:id="@+id/picker_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/gray_border"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/picker_toolbar" />
+
+    <!-- ── CONTENT: camera card + media grid ── -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/picker_grid_rv"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/picker_divider" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
