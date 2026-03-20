@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.apollo.socially.R
 import com.apollo.socially.databinding.ItemCommentBinding
 import com.apollo.socially.model.CommentModel
+import com.bumptech.glide.Glide
 
 class CommentAdapter : ListAdapter<CommentModel, CommentAdapter.CommentViewHolder>(CommentDiffCallback()) {
 
@@ -16,7 +17,8 @@ class CommentAdapter : ListAdapter<CommentModel, CommentAdapter.CommentViewHolde
         return CommentViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: CommentViewHolder, position: Int) = holder.bind(getItem(position))
+    override fun onBindViewHolder(holder: CommentViewHolder, position: Int) =
+        holder.bind(getItem(position))
 
     inner class CommentViewHolder(private val binding: ItemCommentBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -25,19 +27,27 @@ class CommentAdapter : ListAdapter<CommentModel, CommentAdapter.CommentViewHolde
             binding.commentUsername.text = comment.username
             binding.commentText.text = comment.text
             binding.commentTime.text = comment.timeAgo
-            binding.commentLikeNumber.text = if (comment.likeCount > 0) comment.likeCount.toString() else ""
-            comment.avatarRes?.let { binding.commentAvatar.setImageResource(it) }
+            binding.commentLikeNumber.text =
+                if (comment.likeCount > 0) comment.likeCount.toString() else ""
 
-            // Own comment username shown in accent color
+            // Load avatar — URL takes priority over resource
+            if (!comment.avatarUrl.isNullOrBlank()) {
+                Glide.with(binding.root.context)
+                    .load(comment.avatarUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.user_profile_placeholder_avatar)
+                    .into(binding.commentAvatar)
+            } else {
+                binding.commentAvatar.setImageResource(
+                    comment.avatarRes ?: R.drawable.user_profile_placeholder_avatar
+                )
+            }
+
             binding.commentUsername.setTextColor(
                 binding.root.context.getColor(
                     if (comment.isOwnComment) R.color.accent else R.color.black
                 )
             )
-
-            binding.commentBtnLike.setOnClickListener {
-                // TODO: toggle like via ViewModel
-            }
         }
     }
 

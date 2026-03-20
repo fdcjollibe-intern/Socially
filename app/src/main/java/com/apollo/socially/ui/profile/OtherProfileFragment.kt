@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 import com.apollo.socially.data.cache.OtherProfileCache
 import java.util.Date
+import androidx.recyclerview.widget.RecyclerView
 
 class OtherProfileFragment : Fragment() {
 
@@ -70,6 +71,12 @@ class OtherProfileFragment : Fragment() {
                         displayPosts(state.posts, state.hasMore)
                         isFollowing = state.isFollowing
                         updateFollowButton()
+
+                        // Hide follow/message if viewing own profile
+                        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                        val isOwnProfile = currentUid == state.user.uid
+                        binding.otherProfileBtnFollow.visibility = if (isOwnProfile) View.GONE else View.VISIBLE
+                        binding.otherProfileBtnMessage.visibility = if (isOwnProfile) View.GONE else View.VISIBLE
                     }
                     is OtherProfileViewModel.UiState.Error -> {
                         // Hide skeleton, show content with error
@@ -147,14 +154,18 @@ class OtherProfileFragment : Fragment() {
         } else {
             binding.otherProfilePostsGrid.visibility = View.VISIBLE
             binding.otherProfileEmptyState.visibility = View.GONE
-            
-            // Convert Post to PostModel with actual Firebase thumbnails
+
+            val currentState = viewModel.uiState.value as? OtherProfileViewModel.UiState.Success
+            val user = currentState?.user
+
             val postModels = posts.map { post ->
                 PostModel(
                     id = post.id,
                     userId = post.userId,
-                    username = "",
-                    userHandle = "",
+                    username = user?.username ?: "",
+                    userHandle = "@${user?.username ?: ""}",
+                    displayName = user?.displayName ?: "",
+                    userAvatarUrl = user?.profileImageUrl,
                     userAvatarRes = R.drawable.user_profile_placeholder_avatar,
                     imageUrl = post.mediaUrls.firstOrNull(),
                     imageUrlList = post.mediaUrls,
@@ -272,39 +283,55 @@ class OtherProfileFragment : Fragment() {
 
     private fun setupGrid() {
         postsAdapter = ProfileGridAdapter { _, index ->
-            findNavController().navigate(
-                R.id.action_otherProfile_to_profilePostFeed,
-                bundleOf("startIndex" to index)
-            )
+            // Get current posts from ViewModel state
+            val currentState = viewModel.uiState.value
+            if (currentState is OtherProfileViewModel.UiState.Success) {
+                val postModels = currentState.posts.map { post ->
+                    PostModel(
+                        id = post.id,
+                        userId = post.userId,
+                        username = currentState.user.username,
+                        userHandle = "@${currentState.user.username}",
+                        displayName = currentState.user.displayName,
+                        userAvatarUrl = currentState.user.profileImageUrl,
+                        imageUrl = post.mediaUrls.firstOrNull(),
+                        imageUrlList = post.mediaUrls,
+                        caption = post.caption,
+                        likeCount = post.likesCount,
+                        timeAgo = formatTimeAgo(post.createdAt)
+                    )
+                }
+                val bundle = Bundle().apply {
+                    putInt("startIndex", index)
+                    putParcelableArrayList("posts", ArrayList(postModels))
+                }
+                findNavController().navigate(
+                    R.id.action_otherProfile_to_profilePostFeed, bundle
+                )
+            }
         }
 
         val gridLayoutManager = GridLayoutManager(requireContext(), 3)
-        
+
         binding.otherProfilePostsGrid.apply {
             layoutManager = gridLayoutManager
             adapter = postsAdapter
             if (itemDecorationCount == 0) {
                 addItemDecoration(GridSpacingDecoration(3, 2))
             }
-            
-            // Add scroll listener for pagination
-            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    
                     val visibleItemCount = gridLayoutManager.childCount
                     val totalItemCount = gridLayoutManager.itemCount
                     val firstVisibleItemPosition = gridLayoutManager.findFirstVisibleItemPosition()
-                    
                     val currentState = viewModel.uiState.value
-                    
-                    // Load more when scrolled to near bottom
-                    if (currentState is OtherProfileViewModel.UiState.Success 
-                        && !currentState.isLoadingMore 
+                    if (currentState is OtherProfileViewModel.UiState.Success
+                        && !currentState.isLoadingMore
                         && currentState.hasMore
                         && (visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 6
-                        && firstVisibleItemPosition >= 0) {
-                        
+                        && firstVisibleItemPosition >= 0
+                    ) {
                         viewModel.loadMorePosts()
                     }
                 }

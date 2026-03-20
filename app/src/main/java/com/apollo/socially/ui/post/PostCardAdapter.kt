@@ -1,5 +1,10 @@
 package com.apollo.socially.ui.post
 
+import android.os.SystemClock
+import android.text.SpannableString
+import android.text.Spannable
+import android.text.style.StyleSpan
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,38 +19,62 @@ import com.apollo.socially.model.PostModel
 import com.bumptech.glide.Glide
 
 class PostCardAdapter(
-    private val onSeeMoreClick: (PostModel) -> Unit,
-    private val onLikeClick: (PostModel) -> Unit = {}
+    private val onLikeClick: (PostModel) -> Unit = {},
+    private val onCommentClick: (PostModel) -> Unit = {}
 ) : ListAdapter<PostModel, PostCardAdapter.PostViewHolder>(PostDiffCallback()) {
 
+    private var isMuted = false
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
-        val binding = ItemPostCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemPostCardBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
         return PostViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: PostViewHolder, position: Int) = holder.bind(getItem(position))
+    override fun onBindViewHolder(holder: PostViewHolder, position: Int) =
+        holder.bind(getItem(position))
 
-    inner class PostViewHolder(private val binding: ItemPostCardBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    override fun onViewRecycled(holder: PostViewHolder) {
+        super.onViewRecycled(holder)
+        holder.pauseVideo()
+    }
+
+
+    override fun onViewDetachedFromWindow(holder: PostViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        // Full release when view leaves the window
+        holder.releasePlayer()
+    }
+
+    inner class PostViewHolder(
+        private val binding: ItemPostCardBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        private var currentAdapter: PostMediaPagerAdapter? = null
+        private var lastTapTime = 0L
+        private var isCaptionExpanded = false
 
         fun bind(post: PostModel) {
+            isCaptionExpanded = false
+
+            // ── Header ────────────────────────────────────────
             binding.postCardUsername.text = post.username
-            binding.postCardHeaderTime.text = post.timeAgo
-            binding.postCardCaption.text = post.caption
-            binding.postCardTimeAgo.text = post.timeAgo
-            binding.postCardLikeCount.text = formatCount(post.likeCount) + " Liked"
 
-            binding.postCardVerified.visibility =
-                if (post.isVerified) View.VISIBLE else View.GONE
-
-            post.userAvatarRes?.let { binding.postCardAvatar.setImageResource(it) }
             if (!post.userAvatarUrl.isNullOrBlank()) {
                 Glide.with(binding.root.context)
                     .load(post.userAvatarUrl)
                     .circleCrop()
                     .placeholder(R.drawable.user_profile_placeholder_avatar)
                     .into(binding.postCardAvatar)
+            } else {
+                binding.postCardAvatar.setImageResource(
+                    post.userAvatarRes ?: R.drawable.user_profile_placeholder_avatar
+                )
             }
+
+            binding.postCardVerified.visibility =
+                if (post.isVerified) View.VISIBLE else View.GONE
 
             if (!post.musicLabel.isNullOrBlank()) {
                 binding.postCardMusicRow.visibility = View.VISIBLE
@@ -54,59 +83,205 @@ class PostCardAdapter(
                 binding.postCardMusicRow.visibility = View.GONE
             }
 
-            val urls = post.imageUrls   // ← use URL list (always populated from Firebase)
+            // ── Caption ───────────────────────────────────────
+            binding.postCardCaption.maxLines = 2
+            binding.postCardCaption.text = applyMentionSpans(post.caption)
+            binding.postCardTimeAgo.text = post.timeAgo
+            binding.postCardLikeCount.text = formatCount(post.likeCount) + " Liked"
 
-            if (urls.size >= 2) {
-                // MULTI-IMAGE: ViewPager2 with URL-based pager adapter
-                binding.postCardSingleContainer.visibility = View.GONE
-                binding.postCardPagerContainer.visibility = View.VISIBLE
-
-                val pagerAdapter = PostImageUrlPagerAdapter(urls)
-                binding.postCardViewPager.adapter = pagerAdapter
-
-                setupDots(urls.size, 0)
-                binding.postCardViewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-                    override fun onPageSelected(position: Int) {
-                        setupDots(urls.size, position)
-                    }
-                })
-            } else if (urls.size == 1) {
-                // SINGLE IMAGE from URL
-                binding.postCardSingleContainer.visibility = View.VISIBLE
-                binding.postCardPagerContainer.visibility = View.GONE
-                binding.postCardDotsContainer.visibility = View.GONE
-
-                Glide.with(binding.root.context)
-                    .load(urls[0])
-                    .centerCrop()
-                    .placeholder(R.drawable.sample_photo)
-                    .error(R.drawable.sample_photo)
-                    .into(binding.postCardImage)
-            } else {
-                // Fallback: static resource (legacy/sample data)
-                val resImages = post.images
-                binding.postCardSingleContainer.visibility = View.VISIBLE
-                binding.postCardPagerContainer.visibility = View.GONE
-                binding.postCardDotsContainer.visibility = View.GONE
-                resImages.firstOrNull()?.let { binding.postCardImage.setImageResource(it) }
+            // See more — only visible if caption exceeds 2 lines
+            binding.postCardSeeMore.visibility = View.GONE
+            binding.postCardCaption.post {
+                val layout = binding.postCardCaption.layout ?: return@post
+                if (layout.lineCount > 2) {
+                    binding.postCardSeeMore.visibility = View.VISIBLE
+                }
             }
 
-            binding.postCardSeeMore.setOnClickListener { onSeeMoreClick(post) }
-            binding.postCardBtnLike.setOnClickListener { onLikeClick(post) }
+            // Expand/collapse caption inline
+            binding.postCardSeeMore.setOnClickListener {
+                isCaptionExpanded = !isCaptionExpanded
+                if (isCaptionExpanded) {
+                    binding.postCardCaption.maxLines = Int.MAX_VALUE
+                    binding.postCardSeeMore.text = "see less"
+                } else {
+                    binding.postCardCaption.maxLines = 2
+                    binding.postCardSeeMore.text = "see more"
+                }
+            }
+
+            // ── Like state ────────────────────────────────────
+            updateLikeButton(post.isLiked)
+
+            // ── Media ─────────────────────────────────────────
+            val urls = post.imageUrls
+            val hasVideo = urls.any { post.isVideoUrl(it) }
+
+            binding.postCardBtnMute.visibility =
+                if (hasVideo) View.VISIBLE else View.GONE
+            updateMuteButton()
+
+            currentAdapter?.releaseAll()
+            currentAdapter = null
+            binding.postCardViewPager.adapter = null
+
+            when {
+                urls.size >= 2 -> {
+                    binding.postCardSingleContainer.visibility = View.GONE
+                    binding.postCardPagerContainer.visibility = View.VISIBLE
+
+                    val adapter = PostMediaPagerAdapter(
+                        urls = urls,
+                        isMuted = isMuted
+                    )
+                    currentAdapter = adapter
+                    binding.postCardViewPager.adapter = adapter
+                    binding.postCardViewPager.offscreenPageLimit = 1
+
+                    setupDots(urls.size, 0)
+                    binding.postCardViewPager.registerOnPageChangeCallback(
+                        object : ViewPager2.OnPageChangeCallback() {
+                            override fun onPageSelected(position: Int) {
+                                setupDots(urls.size, position)
+                                adapter.onPageSelected(position)
+                            }
+                        }
+                    )
+                }
+
+                urls.size == 1 -> {
+                    binding.postCardDotsContainer.visibility = View.GONE
+                    if (hasVideo) {
+                        binding.postCardSingleContainer.visibility = View.GONE
+                        binding.postCardPagerContainer.visibility = View.VISIBLE
+                        val adapter = PostMediaPagerAdapter(urls = urls, isMuted = isMuted)
+                        currentAdapter = adapter
+                        binding.postCardViewPager.adapter = adapter
+                    } else {
+                        binding.postCardSingleContainer.visibility = View.VISIBLE
+                        binding.postCardPagerContainer.visibility = View.GONE
+                        Glide.with(binding.root.context)
+                            .load(urls[0])
+                            .centerCrop()
+                            .placeholder(R.drawable.sample_photo)
+                            .error(R.drawable.sample_photo)
+                            .into(binding.postCardImage)
+                    }
+                }
+
+                else -> {
+                    binding.postCardSingleContainer.visibility = View.VISIBLE
+                    binding.postCardPagerContainer.visibility = View.GONE
+                    binding.postCardDotsContainer.visibility = View.GONE
+                    post.images.firstOrNull()
+                        ?.let { binding.postCardImage.setImageResource(it) }
+                }
+            }
+
+            // ── Click listeners ───────────────────────────────
+            binding.postCardBtnComment.setOnClickListener {
+                onCommentClick(post)
+            }
+
+            binding.postCardBtnLike.setOnClickListener {
+                updateLikeButton(!post.isLiked)
+                onLikeClick(post)
+            }
+
+            binding.postCardBtnMute.setOnClickListener {
+                isMuted = !isMuted
+                updateMuteButton()
+                currentAdapter?.setMuted(isMuted)
+            }
+
+            // Double tap on image = like
+            val tapTarget = if (urls.size >= 2 || hasVideo)
+                binding.postCardPagerContainer
+            else
+                binding.postCardSingleContainer
+
+            tapTarget.setOnClickListener {
+                val now = SystemClock.elapsedRealtime()
+                if (now - lastTapTime < 300) {
+                    triggerDoubleTapLike(post)
+                }
+                lastTapTime = now
+            }
         }
 
-        private fun setupDots(count: Int, selectedIndex: Int) {
+        fun pauseVideo() {
+            currentAdapter?.pauseAll()
+        }
+
+        fun resumeVideo() {
+            currentAdapter?.resumeActive()
+        }
+
+        fun releasePlayer() {
+            currentAdapter?.releaseAll()
+            currentAdapter = null
+        }
+
+        private fun triggerDoubleTapLike(post: PostModel) {
+            if (!post.isLiked) {
+                updateLikeButton(true)
+                onLikeClick(post)
+            }
+            binding.postCardDoubleTapHeart.apply {
+                visibility = View.VISIBLE
+                alpha = 1f
+                scaleX = 0f
+                scaleY = 0f
+                animate()
+                    .scaleX(1.3f).scaleY(1.3f)
+                    .setDuration(180)
+                    .withEndAction {
+                        animate()
+                            .alpha(0f)
+                            .scaleX(1.6f).scaleY(1.6f)
+                            .setDuration(280)
+                            .withEndAction { visibility = View.GONE }
+                            .start()
+                    }.start()
+            }
+        }
+
+        fun updateLikeButton(isLiked: Boolean) {
+            binding.postCardBtnLike.setColorFilter(
+                binding.root.context.getColor(
+                    if (isLiked) android.R.color.holo_red_light
+                    else android.R.color.white
+                )
+            )
+        }
+
+        private fun updateMuteButton() {
+            binding.postCardBtnMute.setImageResource(
+                if (isMuted) R.drawable.ic_volume_off else R.drawable.ic_volume_on
+            )
+        }
+
+        private fun setupDots(totalCount: Int, currentPosition: Int) {
             binding.postCardDotsContainer.removeAllViews()
             binding.postCardDotsContainer.visibility = View.VISIBLE
+
+            val dotCount = minOf(totalCount, 3)
+            val activeDot = when {
+                totalCount <= 3 -> currentPosition
+                currentPosition == 0 -> 0
+                currentPosition == totalCount - 1 -> 2
+                else -> 1
+            }
 
             val context = binding.root.context
             val dotSize = context.resources.getDimensionPixelSize(R.dimen.dot_size)
             val dotMargin = context.resources.getDimensionPixelSize(R.dimen.dot_margin)
 
-            for (i in 0 until count) {
+            for (i in 0 until dotCount) {
                 val dot = ImageView(context).apply {
                     setImageResource(
-                        if (i == selectedIndex) R.drawable.dot_active else R.drawable.dot_inactive
+                        if (i == activeDot) R.drawable.dot_active
+                        else R.drawable.dot_inactive
                     )
                     val params = ViewGroup.MarginLayoutParams(dotSize, dotSize)
                     params.setMargins(dotMargin, 0, dotMargin, 0)
@@ -114,6 +289,19 @@ class PostCardAdapter(
                 }
                 binding.postCardDotsContainer.addView(dot)
             }
+        }
+
+        private fun applyMentionSpans(text: String): SpannableString {
+            val spannable = SpannableString(text)
+            Regex("([#@][\\w]+)").findAll(text).forEach { match ->
+                spannable.setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    match.range.first,
+                    match.range.last + 1,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            return spannable
         }
     }
 

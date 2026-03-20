@@ -6,10 +6,12 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.apollo.socially.R
+import com.apollo.socially.data.remote.cloudinary.CloudinaryUploader
 import com.apollo.socially.data.upload.PostUploadService
 import com.apollo.socially.data.upload.UploadStateHolder
 import com.apollo.socially.databinding.FragmentCreatePostCaptionBinding
@@ -66,6 +68,46 @@ class CreatePostCaptionFragment : Fragment() {
             if (selectedMedia.isEmpty()) return@setOnClickListener
 
             val caption = binding.captionInput.text?.toString()?.trim() ?: ""
+            
+            // Validate file sizes before starting upload
+            var hasInvalidSize = false
+            var totalSize = 0L
+            
+            for (media in selectedMedia) {
+                val fileSize = CloudinaryUploader.getFileSize(requireContext(), media.uri)
+                totalSize += fileSize
+                
+                if (fileSize > CloudinaryUploader.MAX_FILE_SIZE) {
+                    Toast.makeText(
+                        requireContext(),
+                        "File too large: ${CloudinaryUploader.formatFileSize(fileSize)}. Max 100MB per file.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    hasInvalidSize = true
+                    break
+                }
+                
+                if (fileSize <= 0) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Cannot read file size. Please try a different file.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    hasInvalidSize = true
+                    break
+                }
+            }
+            
+            if (hasInvalidSize) return@setOnClickListener
+            
+            // Show warning for large uploads
+            if (totalSize > 20 * 1024 * 1024) { // 20MB+
+                Toast.makeText(
+                    requireContext(),
+                    "Uploading ${CloudinaryUploader.formatFileSize(totalSize)}. This may take a while.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
 
             // Reset previous state
             UploadStateHolder.reset()

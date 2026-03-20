@@ -14,29 +14,43 @@ data class PostModel(
     val isVerified: Boolean = false,
     val imageRes: Int? = null,
     val imageUrl: String? = null,
-    val imageResList: List<Int> = emptyList(), // For static sample data (backward compat)
-    val imageUrlList: List<String> = emptyList(), // For real Firebase URLs
+    val imageResList: List<Int> = emptyList(),
+    val imageUrlList: List<String> = emptyList(),
     val musicLabel: String? = null,
     val likeCount: Int = 0,
     val isLiked: Boolean = false,
     val likedByAvatars: List<Int> = emptyList(),
     val caption: String = "",
     val timeAgo: String = "12h ago",
-    val isPlaceholder: Boolean = false // For showing gray box when new post detected
+    val isPlaceholder: Boolean = false,
+    val displayName: String = "" // ADD — shown small under username in header
 ) : Parcelable {
-    // Get image URLs as strings - prioritize URL list over single URL
+
     val imageUrls: List<String>
         get() = when {
             imageUrlList.isNotEmpty() -> imageUrlList
             imageUrl != null -> listOf(imageUrl)
             else -> emptyList()
         }
-    
-    // Legacy: Get images as Int resources (backward compat)
+
     val images: List<Int>
         get() = when {
             imageResList.isNotEmpty() -> imageResList
             imageRes != null -> listOf(imageRes)
             else -> emptyList()
         }
+
+    // Detect if a URL is a video by extension or Cloudinary resource type
+    fun isVideoUrl(url: String): Boolean {
+        val lower = url.lowercase()
+        return lower.contains("/video/") ||
+                lower.endsWith(".mp4") ||
+                lower.endsWith(".mov") ||
+                lower.endsWith(".webm")
+    }
+
+    fun getMediaType(url: String): MediaType =
+        if (isVideoUrl(url)) MediaType.VIDEO else MediaType.IMAGE
+
+    enum class MediaType { IMAGE, VIDEO }
 }

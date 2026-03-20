@@ -75,6 +75,18 @@
                 android:layout_gravity="bottom"
                 android:background="@drawable/post_card_bottom_gradient" />
 
+
+            <!-- Double tap heart animation — centered over image -->
+            <ImageView
+                android:id="@+id/post_card_double_tap_heart"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:alpha="0"
+                android:src="@drawable/post_card_ic_heart"
+                android:visibility="gone"
+                app:tint="@android:color/holo_red_light" />
+
             <!-- ── TOP HEADER overlaid ── -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -171,64 +183,67 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- ── BOTTOM-LEFT: action buttons ── -->
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <!-- ── BOTTOM: action buttons left, like count right, dots center ── -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="12dp"
-                android:layout_marginBottom="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_gravity="bottom"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="12dp">
 
-                <ImageButton
-                    android:id="@+id/post_card_btn_like"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/post_card_ic_heart"
-                    app:tint="@android:color/white" />
+                <!-- Left: like, comment, send -->
+                <LinearLayout
+                    android:id="@+id/post_card_action_buttons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent">
 
-                <ImageButton
-                    android:id="@+id/post_card_btn_comment"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/post_card_ic_comment"
-                    app:tint="@android:color/white" />
+                    <ImageButton
+                        android:id="@+id/post_card_btn_like"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/post_card_ic_heart"
+                        app:tint="@android:color/white" />
 
-                <ImageButton
-                    android:id="@+id/post_card_btn_send"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/post_card_ic_send"
-                    app:tint="@android:color/white" />
+                    <ImageButton
+                        android:id="@+id/post_card_btn_comment"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/post_card_ic_comment"
+                        app:tint="@android:color/white" />
 
-            </LinearLayout>
+                    <ImageButton
+                        android:id="@+id/post_card_btn_mute"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_volume_off"
+                        android:visibility="gone"
+                        app:tint="@android:color/white" />
 
-            <!-- ── BOTTOM-RIGHT: like count + dot indicators ── -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginEnd="12dp"
-                android:layout_marginBottom="12dp"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
+                </LinearLayout>
 
-                <!-- Dot indicators — only visible for multi-image -->
+                <!-- Center: dot indicators -->
                 <LinearLayout
                     android:id="@+id/post_card_dots_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="4dp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
 
+                <!-- Right: like count -->
                 <TextView
                     android:id="@+id/post_card_like_count"
                     android:layout_width="wrap_content"
@@ -236,9 +251,11 @@
                     android:textColor="@android:color/white"
                     android:textSize="13sp"
                     android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     tools:text="107k Liked" />
 
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </FrameLayout>
 

@@ -23,7 +23,6 @@ class MainContainerActivity : AppCompatActivity() {
 
     private val hiddenNavDestinations = setOf(
         R.id.settingsFragment,
-        R.id.postDetailFragment,
         R.id.notificationsFragment,
         R.id.storyViewerFragment,
         R.id.createPostPickerFragment,

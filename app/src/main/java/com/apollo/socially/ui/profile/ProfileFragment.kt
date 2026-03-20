@@ -134,19 +134,21 @@ class ProfileFragment : Fragment() {
         } else {
             binding.userProfilePostsGrid.visibility = View.VISIBLE
             binding.userProfileEmptyState.visibility = View.GONE
-            
-            // Convert Post to PostModel for the adapter
+
+            val currentUser = (viewModel.uiState.value as? ProfileViewModel.UiState.Success)?.user
+
             val postModels = posts.map { post ->
-                // Check if this is a placeholder for new post
                 val isPlaceholder = post.mediaUrls.firstOrNull() == "placeholder"
-                
                 PostModel(
                     id = post.id,
                     userId = post.userId,
-                    username = "",
-                    userHandle = "",
+                    username = currentUser?.username ?: "",
+                    userHandle = "@${currentUser?.username ?: ""}",
+                    displayName = currentUser?.displayName ?: "",
+                    userAvatarUrl = currentUser?.profileImageUrl,
                     userAvatarRes = R.drawable.user_profile_placeholder_avatar,
                     imageUrl = if (isPlaceholder) null else post.mediaUrls.firstOrNull(),
+                    imageUrlList = if (isPlaceholder) emptyList() else post.mediaUrls,
                     isPlaceholder = isPlaceholder,
                     caption = post.caption,
                     likeCount = post.likesCount,
@@ -225,20 +227,24 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupPostsGrid() {
+
         postsAdapter = ProfileGridAdapter { _, index ->
             // Pass the actual posts as parcelable array
             val bundle = Bundle().apply {
                 putInt("startIndex", index)
                 // Convert posts to PostModel array for passing
+                val currentUser = (viewModel.uiState.value as? ProfileViewModel.UiState.Success)?.user
                 val postModels = currentPosts.map { post ->
                     PostModel(
                         id = post.id,
                         userId = post.userId,
-                        username = "",
-                        userHandle = "",
+                        username = currentUser?.username ?: "",
+                        userHandle = "@${currentUser?.username ?: ""}",
+                        displayName = currentUser?.displayName ?: "",
+                        userAvatarUrl = currentUser?.profileImageUrl,
                         userAvatarRes = R.drawable.user_profile_placeholder_avatar,
                         imageUrl = post.mediaUrls.firstOrNull(),
-                        imageUrlList = post.mediaUrls, // Pass all media URLs
+                        imageUrlList = post.mediaUrls,
                         caption = post.caption,
                         likeCount = post.likesCount,
                         timeAgo = formatTimeAgo(post.createdAt)

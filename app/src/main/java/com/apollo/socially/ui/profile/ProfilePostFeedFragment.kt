@@ -10,14 +10,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.apollo.socially.R
 import com.apollo.socially.databinding.FragmentProfilePostFeedBinding
 import com.apollo.socially.model.PostModel
+import com.apollo.socially.ui.post.CommentsBottomSheet
 import com.apollo.socially.ui.post.PostCardAdapter
+import com.apollo.socially.ui.post.VideoFocusManager
 
 class ProfilePostFeedFragment : Fragment() {
 
     private var _binding: FragmentProfilePostFeedBinding? = null
     private val binding get() = _binding!!
 
-    // Passed from ProfileFragment — which post index was tapped
     private var startIndex: Int = 0
     private var posts: List<PostModel> = emptyList()
 
@@ -48,11 +49,14 @@ class ProfilePostFeedFragment : Fragment() {
 
     private fun setupFeed() {
         val adapter = PostCardAdapter(
-            onSeeMoreClick = { post ->
-                // Navigate to post detail (comments, full caption)
-                findNavController().navigate(R.id.action_profileFeed_to_postDetail)
+            onLikeClick = { post ->
+
             },
-            onLikeClick = { /* TODO */ }
+            onCommentClick = { post ->
+                CommentsBottomSheet
+                    .newInstance(post.id, post.likeCount, post.isLiked)
+                    .show(childFragmentManager, "comments")
+            }
         )
 
         binding.profileFeedRv.apply {
@@ -60,13 +64,19 @@ class ProfilePostFeedFragment : Fragment() {
             this.adapter = adapter
         }
 
-        // Use actual posts passed from ProfileFragment
+        // Video focus for profile feed too
+        val focusManager = VideoFocusManager(
+            recyclerView = binding.profileFeedRv,
+            getAdapter = { adapter }
+        )
+        focusManager.attach()
+        viewLifecycleOwner.lifecycle.addObserver(focusManager)
+
         if (posts.isNotEmpty()) {
             adapter.submitList(posts)
-            
-            // Scroll to the tapped post immediately (post at startIndex position)
             binding.profileFeedRv.post {
                 binding.profileFeedRv.scrollToPosition(startIndex)
+                focusManager.updateFocus()
             }
         }
     }

@@ -5,20 +5,29 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.apollo.socially.R
 import com.apollo.socially.databinding.FragmentPostDetailBinding
-import com.apollo.socially.model.CommentModel
+import com.apollo.socially.model.PostModel
+import com.bumptech.glide.Glide
+import kotlinx.coroutines.launch
 
 class PostDetailFragment : Fragment() {
 
     private var _binding: FragmentPostDetailBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: PostDetailViewModel by viewModels()
     private val commentAdapter = CommentAdapter()
-    private var visibleCommentCount = 8
-    private val allComments = mutableListOf<CommentModel>()
+    private var post: PostModel? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        @Suppress("DEPRECATION")
+        post = arguments?.getParcelable("post")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,9 +44,41 @@ class PostDetailFragment : Fragment() {
             findNavController().popBackStack()
         }
 
+        post?.let { viewModel.init(it) }
+
+        setupPostImage()
         setupComments()
-        setupLoadMore()
         setupCommentInput()
+        observeViewModel()
+    }
+
+    private fun setupPostImage() {
+        val p = post ?: return
+        val urls = p.imageUrls
+
+        if (urls.isEmpty()) return
+
+        if (urls.size >= 2) {
+            // Multi-image: use pager inside detail card
+            binding.postDetailCard.postCardSingleContainer.visibility = View.GONE
+            binding.postDetailCard.postCardPagerContainer.visibility = View.VISIBLE
+            val pagerAdapter = PostImageUrlPagerAdapter(urls)
+            binding.postDetailCard.postCardViewPager.adapter = pagerAdapter
+        } else {
+            // Single image
+            binding.postDetailCard.postCardSingleContainer.visibility = View.VISIBLE
+            binding.postDetailCard.postCardPagerContainer.visibility = View.GONE
+            Glide.with(this)
+                .load(urls[0])
+                .centerCrop()
+                .into(binding.postDetailCard.postCardImage)
+        }
+
+        // Hide the see more and caption from the included card
+        // since PostDetailFragment shows full caption separately
+        binding.postDetailCard.postCardSeeMore.visibility = View.GONE
+        binding.postDetailCard.postCardCaption.visibility = View.GONE
+        binding.postDetailCard.postCardTimeAgo.visibility = View.GONE
     }
 
     private fun setupComments() {
@@ -47,46 +88,8 @@ class PostDetailFragment : Fragment() {
             isNestedScrollingEnabled = false
         }
 
-        allComments.addAll(listOf(
-            CommentModel("c0", "me", "you", R.drawable.user_profile_placeholder_avatar,
-                "This is my comment! Love this post 🔥", "just now", 0, false, true),
-            CommentModel("c1", "u1", "vibeteller", R.drawable.user_profile_placeholder_avatar,
-                "This is such a beautiful shot! 🌸", "2h ago", 24),
-            CommentModel("c2", "u2", "mooddreamlms", R.drawable.user_profile_placeholder_avatar,
-                "Absolutely stunning 😍", "3h ago", 15),
-            CommentModel("c3", "u3", "sunsetvibes", R.drawable.user_profile_placeholder_avatar,
-                "The lighting is everything ✨", "4h ago", 8),
-            CommentModel("c4", "u4", "calmwaves", R.drawable.user_profile_placeholder_avatar,
-                "Slow days are the best days 🌿", "5h ago", 32),
-            CommentModel("c5", "u5", "driftingclouds", R.drawable.user_profile_placeholder_avatar,
-                "I felt this in my soul 💙", "6h ago", 19),
-            CommentModel("c6", "u6", "quietmoments", R.drawable.user_profile_placeholder_avatar,
-                "Perfect caption for this 🤍", "7h ago", 11),
-            CommentModel("c7", "u7", "goldenhour_", R.drawable.user_profile_placeholder_avatar,
-                "Your feed is a whole mood 🎞️", "8h ago", 45),
-            CommentModel("c8", "u8", "innerpeace99", R.drawable.user_profile_placeholder_avatar,
-                "This made my day better 🌻", "9h ago", 7),
-            CommentModel("c9", "u9", "softaesthetic", R.drawable.user_profile_placeholder_avatar,
-                "Saving this forever 🔖", "10h ago", 28),
-            CommentModel("c10", "u10", "dreamy.lens", R.drawable.user_profile_placeholder_avatar,
-                "Art. Pure art. 🎨", "11h ago", 56),
-            CommentModel("c11", "u11", "wanderlust.k", R.drawable.user_profile_placeholder_avatar,
-                "Where was this taken?? 😮", "12h ago", 13),
-        ))
-
-        submitVisibleComments()
-    }
-
-    private fun submitVisibleComments() {
-        commentAdapter.submitList(allComments.take(visibleCommentCount).toList())
-        binding.postDetailLoadMore.visibility =
-            if (visibleCommentCount < allComments.size) View.VISIBLE else View.GONE
-    }
-
-    private fun setupLoadMore() {
         binding.postDetailLoadMore.setOnClickListener {
-            visibleCommentCount = minOf(visibleCommentCount + 8, allComments.size)
-            submitVisibleComments()
+            viewModel.loadMoreComments()
         }
     }
 
@@ -94,22 +97,55 @@ class PostDetailFragment : Fragment() {
         binding.postDetailBtnSendComment.setOnClickListener {
             val text = binding.postDetailCommentInput.text?.toString()?.trim() ?: return@setOnClickListener
             if (text.isEmpty()) return@setOnClickListener
-
-            val newComment = CommentModel(
-                id = "new_${System.currentTimeMillis()}",
-                userId = "me",
-                username = "you",
-                avatarRes = R.drawable.user_profile_placeholder_avatar,
-                text = text,
-                timeAgo = "just now",
-                likeCount = 0,
-                isOwnComment = true
-            )
-            allComments.add(0, newComment)
-            if (visibleCommentCount < allComments.size) visibleCommentCount++
-            submitVisibleComments()
+            viewModel.sendComment(text)
             binding.postDetailCommentInput.text?.clear()
         }
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isLiked.collect { liked ->
+                if (_binding == null) return@collect
+                binding.postDetailCard.postCardBtnLike.setColorFilter(
+                    requireContext().getColor(
+                        if (liked) android.R.color.holo_red_light else android.R.color.white
+                    )
+                )
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.likeCount.collect { count ->
+                if (_binding == null) return@collect
+                binding.postDetailCard.postCardLikeCount.text =
+                    formatCount(count) + " Liked"
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.commentsState.collect { state ->
+                if (_binding == null) return@collect
+                when (state) {
+                    is PostDetailViewModel.CommentsState.Loading -> {
+                        binding.postDetailLoadMore.visibility = View.GONE
+                    }
+                    is PostDetailViewModel.CommentsState.Success -> {
+                        commentAdapter.submitList(state.comments.toList())
+                        binding.postDetailLoadMore.visibility =
+                            if (state.hasMore && !state.isLoadingMore) View.VISIBLE else View.GONE
+                    }
+                    is PostDetailViewModel.CommentsState.Error -> {
+                        binding.postDetailLoadMore.visibility = View.GONE
+                    }
+                }
+            }
+        }
+    }
+
+    private fun formatCount(count: Int): String = when {
+        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000f)
+        count >= 1_000 -> String.format("%.1fk", count / 1_000f)
+        else -> count.toString()
     }
 
     override fun onDestroyView() {

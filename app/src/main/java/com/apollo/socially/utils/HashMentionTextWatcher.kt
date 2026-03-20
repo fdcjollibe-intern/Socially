@@ -6,14 +6,7 @@ import android.text.TextWatcher
 import android.text.style.StyleSpan
 import android.graphics.Typeface
 
-/**
- * Watches an EditText and automatically applies Bold StyleSpan
- * to any word starting with # or @ (one word, no spaces).
- *
- * Example:
- *   "@johndoe says #hello_world" →
- *   "@johndoe" bold, "#hello_world" bold, rest normal
- */
+
 class HashMentionTextWatcher : TextWatcher {
 
     private var isFormatting = false

@@ -39,8 +39,12 @@ class CreatePostPickerFragment : Fragment() {
             // Navigate to caption with the captured photo
             // cameraUri is set before launch
             cameraUri?.let { uri ->
-                val item = MediaItem(System.currentTimeMillis(), uri,
-                    com.apollo.socially.model.MediaType.IMAGE)
+                val item = MediaItem(
+                    System.currentTimeMillis(), 
+                    uri,
+                    com.apollo.socially.model.MediaType.IMAGE,
+                    sizeBytes = 0L // Size will be checked during upload
+                )
                 navigateToCaption(listOf(item))
             }
         }

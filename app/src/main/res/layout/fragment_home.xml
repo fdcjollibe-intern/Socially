@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- res/layout/fragment_home.xml -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
 
-    <!-- ── TOP APP BAR ── -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/home_appbar"
         android:layout_width="match_parent"
@@ -51,7 +50,7 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- ── UPLOAD PROGRESS BANNER — hidden when idle ── -->
+        <!-- Upload progress banner -->
         <LinearLayout
             android:id="@+id/home_upload_banner"
             android:layout_width="match_parent"
@@ -99,7 +98,7 @@
 
         </LinearLayout>
 
-        <!-- ── SUCCESS BANNER — shown on upload success ── -->
+        <!-- Success banner -->
         <LinearLayout
             android:id="@+id/home_success_banner"
             android:layout_width="match_parent"
@@ -132,7 +131,7 @@
 
         </LinearLayout>
 
-        <!-- ── RETRY BANNER — shown on upload failure ── -->
+        <!-- Retry banner -->
         <LinearLayout
             android:id="@+id/home_retry_banner"
             android:layout_width="match_parent"
@@ -177,48 +176,13 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- ── SCROLLABLE FEED ── -->
-    <androidx.core.widget.NestedScrollView
+    <!-- Single RecyclerView for everything — stories + feed -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/home_feed_rv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- ── STORIES ROW ── -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/home_stories_rv"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/gray_border" />
-
-            <!-- ── POSTS FEED ── -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/home_feed_rv"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:paddingBottom="100dp"
-                android:clipToPadding="false" />
-
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
