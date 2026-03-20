@@ -58,7 +58,7 @@ class PostCardAdapter(
         fun bind(post: PostModel) {
             isCaptionExpanded = false
 
-            // ── Header ────────────────────────────────────────
+            // ── Header avatar ─────────────────────────────────────
             binding.postCardUsername.text = post.username
 
             if (!post.userAvatarUrl.isNullOrBlank()) {
@@ -73,6 +73,14 @@ class PostCardAdapter(
                 )
             }
 
+            // Display name under username in header
+            if (post.displayName.isNotBlank() && post.displayName != post.username) {
+                binding.postCardDisplayName.visibility = View.VISIBLE
+                binding.postCardDisplayName.text = post.displayName
+            } else {
+                binding.postCardDisplayName.visibility = View.GONE
+            }
+
             binding.postCardVerified.visibility =
                 if (post.isVerified) View.VISIBLE else View.GONE
 
@@ -83,22 +91,60 @@ class PostCardAdapter(
                 binding.postCardMusicRow.visibility = View.GONE
             }
 
-            // ── Caption ───────────────────────────────────────
+            // ── Caption area avatar ───────────────────────────────
+            if (!post.userAvatarUrl.isNullOrBlank()) {
+                Glide.with(binding.root.context)
+                    .load(post.userAvatarUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.user_profile_placeholder_avatar)
+                    .into(binding.postCardCaptionAvatar)
+            } else {
+                binding.postCardCaptionAvatar.setImageResource(
+                    post.userAvatarRes ?: R.drawable.user_profile_placeholder_avatar
+                )
+            }
+
+            // ── Caption with bold username prefix ─────────────────
+            // Build: "username caption text" where username is bold
+            val captionText = when {
+                post.username.isNotBlank() && post.caption.isNotBlank() ->
+                    "${post.username} ${post.caption}"
+                post.username.isNotBlank() ->
+                    post.username
+                post.caption.isNotBlank() ->
+                    post.caption
+                else -> ""
+            }
+
             binding.postCardCaption.maxLines = 2
-            binding.postCardCaption.text = applyMentionSpans(post.caption)
+            if (captionText.isNotBlank()) {
+                val spannable = applyMentionSpans(captionText)
+                // Bold the username prefix
+                if (post.username.isNotBlank() && captionText.startsWith(post.username)) {
+                    spannable.setSpan(
+                        StyleSpan(Typeface.BOLD),
+                        0,
+                        post.username.length,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+                binding.postCardCaption.text = spannable
+            } else {
+                binding.postCardCaption.text = ""
+            }
+
             binding.postCardTimeAgo.text = post.timeAgo
             binding.postCardLikeCount.text = formatCount(post.likeCount) + " Liked"
 
             // See more — only visible if caption exceeds 2 lines
             binding.postCardSeeMore.visibility = View.GONE
+            binding.postCardSeeMore.text = "see more"
             binding.postCardCaption.post {
                 val layout = binding.postCardCaption.layout ?: return@post
-                if (layout.lineCount > 2) {
-                    binding.postCardSeeMore.visibility = View.VISIBLE
-                }
+                binding.postCardSeeMore.visibility =
+                    if (layout.lineCount > 2) View.VISIBLE else View.GONE
             }
 
-            // Expand/collapse caption inline
             binding.postCardSeeMore.setOnClickListener {
                 isCaptionExpanded = !isCaptionExpanded
                 if (isCaptionExpanded) {
@@ -110,10 +156,10 @@ class PostCardAdapter(
                 }
             }
 
-            // ── Like state ────────────────────────────────────
+            // ── Like state ────────────────────────────────────────
             updateLikeButton(post.isLiked)
 
-            // ── Media ─────────────────────────────────────────
+            // ── Media ─────────────────────────────────────────────
             val urls = post.imageUrls
             val hasVideo = urls.any { post.isVideoUrl(it) }
 
@@ -130,10 +176,7 @@ class PostCardAdapter(
                     binding.postCardSingleContainer.visibility = View.GONE
                     binding.postCardPagerContainer.visibility = View.VISIBLE
 
-                    val adapter = PostMediaPagerAdapter(
-                        urls = urls,
-                        isMuted = isMuted
-                    )
+                    val adapter = PostMediaPagerAdapter(urls = urls, isMuted = isMuted)
                     currentAdapter = adapter
                     binding.postCardViewPager.adapter = adapter
                     binding.postCardViewPager.offscreenPageLimit = 1
@@ -178,10 +221,8 @@ class PostCardAdapter(
                 }
             }
 
-            // ── Click listeners ───────────────────────────────
-            binding.postCardBtnComment.setOnClickListener {
-                onCommentClick(post)
-            }
+            // ── Click listeners ───────────────────────────────────
+            binding.postCardBtnComment.setOnClickListener { onCommentClick(post) }
 
             binding.postCardBtnLike.setOnClickListener {
                 updateLikeButton(!post.isLiked)
@@ -194,7 +235,6 @@ class PostCardAdapter(
                 currentAdapter?.setMuted(isMuted)
             }
 
-            // Double tap on image = like
             val tapTarget = if (urls.size >= 2 || hasVideo)
                 binding.postCardPagerContainer
             else
@@ -202,9 +242,7 @@ class PostCardAdapter(
 
             tapTarget.setOnClickListener {
                 val now = SystemClock.elapsedRealtime()
-                if (now - lastTapTime < 300) {
-                    triggerDoubleTapLike(post)
-                }
+                if (now - lastTapTime < 300) triggerDoubleTapLike(post)
                 lastTapTime = now
             }
         }

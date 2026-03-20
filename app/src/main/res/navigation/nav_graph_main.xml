@@ -25,6 +25,17 @@
             app:popExitAnim="@anim/story_slide_down_exit" />
     </fragment>
 
+
+    <fragment
+        android:id="@+id/storyViewerFragment"
+        android:name="com.apollo.socially.ui.story.StoryViewerFragment"
+        android:label="Story">
+        <argument
+            android:name="userId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
     <!-- ── MESSAGES ── -->
     <fragment
         android:id="@+id/navigation_messages"
@@ -178,5 +189,7 @@
         android:id="@+id/storyViewerFragment"
         android:name="com.apollo.socially.ui.story.StoryViewerFragment"
         android:label="Story" />
+
+
 
 </navigation>

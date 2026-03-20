@@ -57,7 +57,8 @@
             android:layout_height="wrap_content"
             android:background="#FAFAFA"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="gone"
+            app:layout_scrollFlags="noScroll">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -108,7 +109,8 @@
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="8dp"
-            android:visibility="gone">
+            android:visibility="gone"
+            app:layout_scrollFlags="noScroll">
 
             <TextView
                 android:layout_width="0dp"
@@ -141,7 +143,8 @@
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="8dp"
-            android:visibility="gone">
+            android:visibility="gone"
+            app:layout_scrollFlags="noScroll">
 
             <TextView
                 android:layout_width="0dp"
@@ -174,9 +177,29 @@
 
         </LinearLayout>
 
+        <!-- Stories row — pinned, no scroll flags -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/home_stories_rv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_scrollFlags="noScroll" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/gray_border"
+            app:layout_scrollFlags="noScroll" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Single RecyclerView for everything — stories + feed -->
+    <!-- Feed RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/home_feed_rv"
         android:layout_width="match_parent"

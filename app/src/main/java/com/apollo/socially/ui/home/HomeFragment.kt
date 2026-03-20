@@ -1,9 +1,12 @@
 package com.apollo.socially.ui.home
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -12,11 +15,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.apollo.socially.R
 import com.apollo.socially.data.upload.PostUploadService
+import com.apollo.socially.data.upload.StoryUploadService
+import com.apollo.socially.data.upload.StoryUploadStateHolder
 import com.apollo.socially.data.upload.UploadStateHolder
 import com.apollo.socially.databinding.FragmentHomeBinding
 import com.apollo.socially.ui.post.CommentsBottomSheet
 import com.apollo.socially.ui.post.PostCardAdapter
 import com.apollo.socially.ui.post.VideoFocusManager
+import com.apollo.socially.ui.story.StoryAdapter
+import com.apollo.socially.ui.story.StoryRowViewModel
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -27,8 +34,23 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModels()
+    private val storyRowViewModel: StoryRowViewModel by viewModels()
+
     private lateinit var postAdapter: PostCardAdapter
+    private lateinit var storyAdapter: StoryAdapter
     private lateinit var videoFocusManager: VideoFocusManager
+
+    private val storyMediaPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri ?: return@registerForActivityResult
+        val isVideo = requireContext().contentResolver
+            .getType(uri)?.startsWith("video") == true
+        val intent = StoryUploadService.buildIntent(
+            requireContext(), uri, isVideo, ""
+        )
+        requireContext().startForegroundService(intent)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,8 +65,11 @@ class HomeFragment : Fragment() {
 
         setupAppBarFade()
         setupFeed()
+        setupStories()
         observeFeed()
+        observeStories()
         observeUploadState()
+        observeStoryUpload()
 
         binding.homeBtnNotifications.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_notifications)
@@ -71,6 +96,8 @@ class HomeFragment : Fragment() {
             hideSuccessBanner()
         }
     }
+
+    // ── Feed ──────────────────────────────────────────────────
 
     private fun setupFeed() {
         postAdapter = PostCardAdapter(
@@ -119,18 +146,79 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 when (state) {
-                    is HomeViewModel.UiState.Loading -> { /* show shimmer later */ }
+                    is HomeViewModel.UiState.Loading -> {}
                     is HomeViewModel.UiState.Success -> {
                         postAdapter.submitList(state.posts)
                         binding.homeFeedRv.post {
                             videoFocusManager.updateFocus()
                         }
                     }
-                    is HomeViewModel.UiState.Error -> { /* show error later */ }
+                    is HomeViewModel.UiState.Error -> {}
                 }
             }
         }
     }
+
+    // ── Stories ───────────────────────────────────────────────
+
+    private fun setupStories() {
+        storyAdapter = StoryAdapter(
+            onMyStoryClick = { item ->
+                if (item.hasStory) {
+                    val bundle = Bundle().apply { putString("userId", item.userId) }
+                    findNavController().navigate(R.id.action_home_to_storyViewer, bundle)
+                } else {
+                    // No story yet — open media picker
+                    storyMediaPickerLauncher.launch(arrayOf("image/*", "video/*"))
+                }
+            },
+            onStoryClick = { item ->
+                val bundle = Bundle().apply { putString("userId", item.userId) }
+                findNavController().navigate(R.id.action_home_to_storyViewer, bundle)
+            }
+        )
+
+        binding.homeStoriesRv.apply {
+            layoutManager = LinearLayoutManager(
+                requireContext(), LinearLayoutManager.HORIZONTAL, false
+            )
+            adapter = storyAdapter
+        }
+    }
+
+    private fun observeStories() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            storyRowViewModel.uiState.collect { state ->
+                if (state is StoryRowViewModel.UiState.Success) {
+                    storyAdapter.submitList(state.rows)
+                }
+            }
+        }
+    }
+
+    private fun observeStoryUpload() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            StoryUploadStateHolder.state.collect { state ->
+                when (state) {
+                    is StoryUploadStateHolder.State.Success -> {
+                        storyRowViewModel.loadStories()
+                        StoryUploadStateHolder.reset()
+                    }
+                    is StoryUploadStateHolder.State.Error -> {
+                        Toast.makeText(
+                            requireContext(),
+                            "Story upload failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        StoryUploadStateHolder.reset()
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    // ── Lifecycle ─────────────────────────────────────────────
 
     override fun onPause() {
         super.onPause()
@@ -147,6 +235,8 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    // ── Upload banners ────────────────────────────────────────
 
     private fun observeUploadState() {
         viewLifecycleOwner.lifecycleScope.launch {

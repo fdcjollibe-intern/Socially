@@ -42,6 +42,10 @@
             android:foregroundServiceType="dataSync"
             android:exported="false" />
 
+        <service
+            android:name="com.apollo.socially.data.upload.StoryUploadService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
 
 
