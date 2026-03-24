@@ -7,13 +7,13 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [UserSessionEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     
     abstract fun userSessionDao(): UserSessionDao
-    
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null

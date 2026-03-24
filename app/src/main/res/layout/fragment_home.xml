@@ -37,16 +37,33 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <ImageButton
-                android:id="@+id/home_btn_notifications"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="6dp"
-                android:src="@drawable/home_ic_heart_outline"
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageButton
+                    android:id="@+id/home_btn_notifications"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="6dp"
+                    android:src="@drawable/home_ic_heart_outline" />
+
+                <!-- Notification badge -->
+                <View
+                    android:id="@+id/home_notification_badge"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/notification_badge"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -177,7 +194,8 @@
 
         </LinearLayout>
 
-        <!-- Stories row — pinned, no scroll flags -->
+
+    <!-- kapoyas bug
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/home_stories_rv"
             android:layout_width="match_parent"
@@ -189,13 +207,13 @@
             android:paddingBottom="10dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_scrollFlags="noScroll" />
-
-        <!-- Divider -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/gray_border"
             app:layout_scrollFlags="noScroll" />
+        -->
+
 
     </com.google.android.material.appbar.AppBarLayout>
 

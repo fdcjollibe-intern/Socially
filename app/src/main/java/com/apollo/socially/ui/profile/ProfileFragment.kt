@@ -137,25 +137,35 @@ class ProfileFragment : Fragment() {
 
             val currentUser = (viewModel.uiState.value as? ProfileViewModel.UiState.Success)?.user
 
-            val postModels = posts.map { post ->
-                val isPlaceholder = post.mediaUrls.firstOrNull() == "placeholder"
-                PostModel(
-                    id = post.id,
-                    userId = post.userId,
-                    username = currentUser?.username ?: "",
-                    userHandle = "@${currentUser?.username ?: ""}",
-                    displayName = currentUser?.displayName ?: "",
-                    userAvatarUrl = currentUser?.profileImageUrl,
-                    userAvatarRes = R.drawable.user_profile_placeholder_avatar,
-                    imageUrl = if (isPlaceholder) null else post.mediaUrls.firstOrNull(),
-                    imageUrlList = if (isPlaceholder) emptyList() else post.mediaUrls,
-                    isPlaceholder = isPlaceholder,
-                    caption = post.caption,
-                    likeCount = post.likesCount,
-                    timeAgo = formatTimeAgo(post.createdAt)
-                )
+            // Fetch liked states and convert to PostModels
+            viewLifecycleOwner.lifecycleScope.launch {
+                val postModels = posts.map { post ->
+                    val isPlaceholder = post.mediaUrls.firstOrNull() == "placeholder"
+                    val isLiked = if (!isPlaceholder) {
+                        viewModel.isPostLiked(post.id)
+                    } else {
+                        false
+                    }
+                    
+                    PostModel(
+                        id = post.id,
+                        userId = post.userId,
+                        username = currentUser?.username ?: "",
+                        userHandle = "@${currentUser?.username ?: ""}",
+                        displayName = currentUser?.displayName ?: "",
+                        userAvatarUrl = currentUser?.profileImageUrl,
+                        userAvatarRes = R.drawable.user_profile_placeholder_avatar,
+                        imageUrl = if (isPlaceholder) null else post.mediaUrls.firstOrNull(),
+                        imageUrlList = if (isPlaceholder) emptyList() else post.mediaUrls,
+                        isPlaceholder = isPlaceholder,
+                        caption = post.caption,
+                        likeCount = post.likesCount,
+                        isLiked = isLiked,
+                        timeAgo = formatTimeAgo(post.createdAt)
+                    )
+                }
+                postsAdapter.submitList(postModels)
             }
-            postsAdapter.submitList(postModels)
         }
     }
 
@@ -230,33 +240,37 @@ class ProfileFragment : Fragment() {
 
         postsAdapter = ProfileGridAdapter { _, index ->
             // Pass the actual posts as parcelable array
-            val bundle = Bundle().apply {
-                putInt("startIndex", index)
-                // Convert posts to PostModel array for passing
-                val currentUser = (viewModel.uiState.value as? ProfileViewModel.UiState.Success)?.user
-                val postModels = currentPosts.map { post ->
-                    PostModel(
-                        id = post.id,
-                        userId = post.userId,
-                        username = currentUser?.username ?: "",
-                        userHandle = "@${currentUser?.username ?: ""}",
-                        displayName = currentUser?.displayName ?: "",
-                        userAvatarUrl = currentUser?.profileImageUrl,
-                        userAvatarRes = R.drawable.user_profile_placeholder_avatar,
-                        imageUrl = post.mediaUrls.firstOrNull(),
-                        imageUrlList = post.mediaUrls,
-                        caption = post.caption,
-                        likeCount = post.likesCount,
-                        timeAgo = formatTimeAgo(post.createdAt)
-                    )
+            viewLifecycleOwner.lifecycleScope.launch {
+                val bundle = Bundle().apply {
+                    putInt("startIndex", index)
+                    // Convert posts to PostModel array for passing
+                    val currentUser = (viewModel.uiState.value as? ProfileViewModel.UiState.Success)?.user
+                    val postModels = currentPosts.map { post ->
+                        val isLiked = viewModel.isPostLiked(post.id)
+                        PostModel(
+                            id = post.id,
+                            userId = post.userId,
+                            username = currentUser?.username ?: "",
+                            userHandle = "@${currentUser?.username ?: ""}",
+                            displayName = currentUser?.displayName ?: "",
+                            userAvatarUrl = currentUser?.profileImageUrl,
+                            userAvatarRes = R.drawable.user_profile_placeholder_avatar,
+                            imageUrl = post.mediaUrls.firstOrNull(),
+                            imageUrlList = post.mediaUrls,
+                            caption = post.caption,
+                            likeCount = post.likesCount,
+                            isLiked = isLiked,
+                            timeAgo = formatTimeAgo(post.createdAt)
+                        )
+                    }
+                    putParcelableArrayList("posts", ArrayList(postModels))
                 }
-                putParcelableArrayList("posts", ArrayList(postModels))
+                
+                findNavController().navigate(
+                    R.id.action_profile_to_profilePostFeed,
+                    bundle
+                )
             }
-            
-            findNavController().navigate(
-                R.id.action_profile_to_profilePostFeed,
-                bundle
-            )
         }
 
         val gridLayoutManager = GridLayoutManager(requireContext(), 3)

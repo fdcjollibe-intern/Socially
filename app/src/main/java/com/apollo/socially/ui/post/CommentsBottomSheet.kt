@@ -7,9 +7,14 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.apollo.socially.R
 import com.apollo.socially.databinding.BottomSheetCommentsBinding
+import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class CommentsBottomSheet : BottomSheetDialogFragment() {
 
@@ -18,6 +23,9 @@ class CommentsBottomSheet : BottomSheetDialogFragment() {
 
     private val viewModel: PostDetailViewModel by viewModels()
     private val commentAdapter = CommentAdapter()
+    
+    private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     companion object {
         fun newInstance(postId: String, likeCount: Int, isLiked: Boolean): CommentsBottomSheet {
@@ -58,12 +66,34 @@ class CommentsBottomSheet : BottomSheetDialogFragment() {
         )
         viewModel.init(post)
 
+        loadCurrentUserAvatar()
         setupCommentsList()
         setupInput()
         observeViewModel()
     }
+    
+    private fun loadCurrentUserAvatar() {
+        val uid = auth.currentUser?.uid ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val userDoc = firestore.collection("users").document(uid).get().await()
+                val avatarUrl = userDoc.getString("profileImageUrl")
+                if (!avatarUrl.isNullOrBlank()) {
+                    Glide.with(this@CommentsBottomSheet)
+                        .load(avatarUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.user_profile_placeholder_avatar)
+                        .into(binding.commentsInputAvatar)
+                }
+            } catch (e: Exception) {
+                // Keep placeholder
+            }
+        }
+    }
 
     private fun setupCommentsList() {
+        val highlightCommentId = arguments?.getString("highlightCommentId")
+        
         binding.commentsRv.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = commentAdapter
@@ -71,6 +101,49 @@ class CommentsBottomSheet : BottomSheetDialogFragment() {
 
         binding.commentsLoadMore.setOnClickListener {
             viewModel.loadMoreComments()
+        }
+        
+        // Scroll to and highlight comment if specified
+        if (highlightCommentId != null) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                // Wait for comments to load
+                viewModel.commentsState.collect { state ->
+                    if (state is PostDetailViewModel.CommentsState.Success) {
+                        val index = state.comments.indexOfFirst { it.id == highlightCommentId }
+                        if (index != -1) {
+                            binding.commentsRv.post {
+                                binding.commentsRv.scrollToPosition(index)
+                                // Highlight with fade animation
+                                highlightCommentAtPosition(index)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun highlightCommentAtPosition(position: Int) {
+        binding.commentsRv.post {
+            val viewHolder = binding.commentsRv.findViewHolderForAdapterPosition(position)
+            viewHolder?.itemView?.let { view ->
+                view.setBackgroundColor(requireContext().getColor(R.color.accent))
+                view.alpha = 0.3f
+                view.animate()
+                    .alpha(1f)
+                    .setDuration(300)
+                    .withEndAction {
+                        view.animate()
+                            .alpha(0f)
+                            .setDuration(2000)
+                            .withEndAction {
+                                view.setBackgroundColor(requireContext().getColor(android.R.color.transparent))
+                                view.alpha = 1f
+                            }
+                            .start()
+                    }
+                    .start()
+            }
         }
     }
 

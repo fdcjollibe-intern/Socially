@@ -23,6 +23,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val firestore = FirebaseFirestore.getInstance()
     private val userRepository = UserRepository(app.applicationContext)
     private val postRepository = PostRepository()
+    private val notificationRepository = com.apollo.socially.data.repository.NotificationRepository()
 
     sealed class UiState {
         object Loading : UiState()
@@ -41,17 +42,36 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private var lastDocument: DocumentSnapshot? = null
     private val userCache = mutableMapOf<String, User>()
 
+    private val _hasUnreadNotifications = MutableStateFlow(false)
+    val hasUnreadNotifications: StateFlow<Boolean> = _hasUnreadNotifications
+
     companion object {
         const val PAGE_SIZE = 8
     }
 
     init {
         loadFeed()
+        checkUnreadNotifications()
+    }
+    
+    fun checkUnreadNotifications() {
+        viewModelScope.launch {
+            try {
+                val notifications = notificationRepository.getUserNotifications(limit = 50).getOrNull() ?: emptyList()
+                val hasUnread = notifications.any { it.isRead == false }
+                _hasUnreadNotifications.value = hasUnread
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
     }
 
 
 
-    private fun Post.toPostModel(user: User): PostModel {
+    private suspend fun Post.toPostModel(user: User): PostModel {
+        // Fetch the liked state for this post
+        val isLiked = postRepository.isLiked(id).getOrDefault(false)
+        
         return PostModel(
             id = id,
             userId = userId,
@@ -62,6 +82,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             imageUrlList = mediaUrls,
             caption = caption,
             likeCount = likesCount,
+            isLiked = isLiked,
             timeAgo = createdAt?.toTimeAgo() ?: "just now"
         )
     }
@@ -145,6 +166,45 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                     .preload()
             }
         }
+    }
+
+    private val _showSpamWarning = MutableStateFlow<String?>(null)
+    val showSpamWarning: StateFlow<String?> = _showSpamWarning
+    
+    fun toggleLike(post: PostModel) {
+        viewModelScope.launch {
+            val result = postRepository.toggleLike(post.id, post.isLiked)
+            result.onSuccess { newLikedState ->
+                // Update the post in the list
+                val currentState = _uiState.value
+                if (currentState is UiState.Success) {
+                    val updatedPosts = currentState.posts.map { p ->
+                        if (p.id == post.id) {
+                            p.copy(
+                                isLiked = newLikedState,
+                                likeCount = if (newLikedState) p.likeCount + 1 else p.likeCount - 1
+                            )
+                        } else {
+                            p
+                        }
+                    }
+                    // Find and update in allPosts as well
+                    val index = allPosts.indexOfFirst { it.id == post.id }
+                    if (index != -1) {
+                        allPosts[index] = updatedPosts.first { it.id == post.id }
+                    }
+                    _uiState.value = currentState.copy(posts = updatedPosts)
+                }
+                // Refresh notification badge since we created/deleted a notification
+                checkUnreadNotifications()
+            }.onFailure { error ->
+                _showSpamWarning.value = error.message
+            }
+        }
+    }
+    
+    fun clearSpamWarning() {
+        _showSpamWarning.value = null
     }
 
 }

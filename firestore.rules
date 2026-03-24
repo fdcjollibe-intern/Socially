@@ -10,14 +10,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-
-      // Read own document
-      allow read: if request.auth != null && request.auth.uid == userId;
-
-      // Also allow reading other users (needed for search, profile views)
       allow read: if request.auth != null;
 
-      // Create on registration — uses displayName now
       allow create: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'username'])
@@ -28,15 +22,50 @@ service cloud.firestore {
         && request.resource.data.displayName.size() >= 2
         && isValidUsername(request.resource.data.username);
 
-      // Update own document (uid, email, createdAt are immutable)
+      // Update own document (uid, email, createdAt immutable)
       allow update: if request.auth != null
         && request.auth.uid == userId
         && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['uid', 'email', 'createdAt']);
 
-      // No deletes
+      // Allow others to update ONLY followersCount by +1 or -1
+      allow update: if request.auth != null
+        && request.auth.uid != userId
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['followersCount'])
+        && request.resource.data.followersCount is int
+        && (request.resource.data.followersCount == resource.data.followersCount + 1
+            || request.resource.data.followersCount == resource.data.followersCount - 1);
+
       allow delete: if false;
     }
+
+
+
+    match /stories/{storyId} {
+    allow read: if request.auth != null;
+
+    allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+            'userId', 'mediaUrl', 'mediaType',
+            'caption', 'isExpired', 'createdAt', 'expiresAt'
+        ])
+        && request.resource.data.mediaUrl is string
+        && request.resource.data.mediaType in ['image', 'video']
+        && request.resource.data.isExpired == false;
+
+    allow update: if request.auth != null
+        && (resource.data.userId == request.auth.uid
+            || request.resource.data.diff(resource.data)
+                .affectedKeys().hasOnly(['viewerIds', 'isExpired']));
+
+    allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+		}
+
+
+
 
     match /posts/{postId} {
       allow read: if request.auth != null;
@@ -52,22 +81,44 @@ service cloud.firestore {
         && request.resource.data.commentsCount == 0
         && request.resource.data.createdAt is timestamp;
 
+      // Post owner can update anything except userId
       allow update: if request.auth != null
         && resource.data.userId == request.auth.uid
         && request.resource.data.userId == resource.data.userId;
+
+      // Any logged-in user can update ONLY likesCount or commentsCount
+      // This is needed for like/comment actions on others' posts
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likesCount'])
+        && request.resource.data.likesCount is int
+        && (request.resource.data.likesCount == resource.data.likesCount + 1
+            || request.resource.data.likesCount == resource.data.likesCount - 1);
+
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['commentsCount'])
+        && request.resource.data.commentsCount is int
+        && request.resource.data.commentsCount >= 0;
 
       allow delete: if request.auth != null
         && resource.data.userId == request.auth.uid;
     }
 
+    match /posts/{postId}/likes/{userId} {
+      allow read: if request.auth != null;
+      allow create, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /posts/{postId}/comments/{commentId} {
       allow read: if request.auth != null;
 
+      // Fixed: was checking 'content' but field is named 'text'
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.keys().hasAll(['userId', 'content', 'createdAt'])
-        && request.resource.data.content is string
-        && request.resource.data.content.size() > 0
+        && request.resource.data.keys().hasAll(['userId', 'username', 'userAvatarUrl', 'text', 'createdAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
         && request.resource.data.createdAt is timestamp;
 
       allow update: if request.auth != null
@@ -78,42 +129,48 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
-    // Following collection - users you follow
     match /following/{userId}/userFollowing/{followingId} {
-      // Read your own following list
-      allow read: if request.auth != null && request.auth.uid == userId;
-
-      // Also allow others to read (for profile viewing)
       allow read: if request.auth != null;
-
-      // Create: You can add someone to YOUR following list
       allow create: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.keys().hasAll(['userId', 'followedAt'])
         && request.resource.data.userId == followingId
         && request.resource.data.followedAt is timestamp;
-
-      // Delete: You can remove from YOUR following list
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Followers collection - users who follow you
     match /followers/{userId}/userFollowers/{followerId} {
-      // Read your own followers list
-      allow read: if request.auth != null && request.auth.uid == userId;
-
-      // Also allow others to read (for profile viewing)
       allow read: if request.auth != null;
-
-      // Create: Someone can add themselves to YOUR followers (when they follow you)
       allow create: if request.auth != null
         && request.auth.uid == followerId
         && request.resource.data.keys().hasAll(['userId', 'followedAt'])
         && request.resource.data.userId == followerId
         && request.resource.data.followedAt is timestamp;
-
-      // Delete: Someone can remove themselves from YOUR followers (when they unfollow you)
       allow delete: if request.auth != null && request.auth.uid == followerId;
+    }
+
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
+      // Anyone can create notifications (for other users)
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['userId', 'actorId', 'actorUsername', 'type', 'isRead', 'createdAt'])
+        && request.resource.data.userId is string
+        && request.resource.data.actorId is string
+        && request.resource.data.type in ['LIKE', 'COMMENT', 'FOLLOW']
+        && request.resource.data.isRead == false
+        && request.resource.data.createdAt is timestamp;
+
+      // Users can update (mark as read) their own notifications
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+
+      // Creator can delete their notification
+      allow delete: if request.auth != null
+        && resource.data.actorId == request.auth.uid;
     }
 
     match /{document=**} {

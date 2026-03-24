@@ -226,4 +226,24 @@ class ProfileViewModel(app: Application) : AndroidViewModel(app) {
                 }
         }
     }
+
+    suspend fun isPostLiked(postId: String): Boolean {
+        return postRepository.isLiked(postId).getOrDefault(false)
+    }
+
+    fun toggleLike(postId: String, currentlyLiked: Boolean, onSuccess: (Boolean, Int) -> Unit) {
+        viewModelScope.launch {
+            val result = postRepository.toggleLike(postId, currentlyLiked)
+            result.onSuccess { newLikedState ->
+                val newLikeCount = if (newLikedState && !currentlyLiked) {
+                    1
+                } else if (!newLikedState && currentlyLiked) {
+                    -1
+                } else {
+                    0
+                }
+                onSuccess(newLikedState, newLikeCount)
+            }
+        }
+    }
 }

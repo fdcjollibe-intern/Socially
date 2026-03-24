@@ -20,7 +20,7 @@ class VideoFocusManager(
                 RecyclerView.SCROLL_STATE_DRAGGING -> pauseAll()
             }
         }
-        // Removed onScrolled pause — was too aggressive and prevented resuming
+
     }
 
     fun attach() {
@@ -65,8 +65,6 @@ class VideoFocusManager(
             currentPlayingPosition = bestPosition
         }
 
-        // ALWAYS resume current — fixes the "only first video plays" bug
-        // because RecyclerView may have recycled and rebound the holder
         getHolder(currentPlayingPosition)?.resumeVideo()
     }
 

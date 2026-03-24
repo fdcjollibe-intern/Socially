@@ -10,6 +10,11 @@
     <color name="accent">#25A0B0</color>
     <color name="pink">#F5C8C6</color>
 
+    <color name="nav_selected">#1B7A8A</color>
+    <color name="notif_unread_bg">#F0F8FF</color>
+
 
 </resources>
+
+
 

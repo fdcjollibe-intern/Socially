@@ -27,8 +27,6 @@ class CommentAdapter : ListAdapter<CommentModel, CommentAdapter.CommentViewHolde
             binding.commentUsername.text = comment.username
             binding.commentText.text = comment.text
             binding.commentTime.text = comment.timeAgo
-            binding.commentLikeNumber.text =
-                if (comment.likeCount > 0) comment.likeCount.toString() else ""
 
             // Load avatar — URL takes priority over resource
             if (!comment.avatarUrl.isNullOrBlank()) {

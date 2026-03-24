@@ -222,10 +222,20 @@ class OtherProfileViewModel(app: Application) : AndroidViewModel(app) {
 
                 val currentState = _uiState.value
                 if (currentState is UiState.Success) {
+                    // Fetch fresh user data to get updated counts
                     userRepository.getUserById(userId)
                         .onSuccess { updatedUser ->
                             currentUser = updatedUser
                             OtherProfileCache.updateUser(userId, updatedUser)
+                            
+                            // Emit event for other screens
+                            com.apollo.socially.data.repository.FollowEventBus.emit(
+                                com.apollo.socially.data.repository.FollowEventBus.FollowEvent(
+                                    targetUserId = userId,
+                                    isNowFollowing = currentIsFollowing
+                                )
+                            )
+                            
                             _uiState.value = currentState.copy(
                                 user = updatedUser,
                                 isFollowing = currentIsFollowing
@@ -235,7 +245,8 @@ class OtherProfileViewModel(app: Application) : AndroidViewModel(app) {
                         }
                 }
                 onComplete(true)
-            }.onFailure {
+            }.onFailure { error ->
+                android.util.Log.e("OtherProfileVM", "Follow toggle failed: ${error.message}", error)
                 onComplete(false)
             }
         }

@@ -5,9 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.apollo.socially.R
 import com.apollo.socially.databinding.FragmentProfilePostFeedBinding
 import com.apollo.socially.model.PostModel
 import com.apollo.socially.ui.post.CommentsBottomSheet
@@ -20,13 +20,16 @@ class ProfilePostFeedFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var startIndex: Int = 0
-    private var posts: List<PostModel> = emptyList()
+    private var posts: MutableList<PostModel> = mutableListOf()
+    private lateinit var adapter: PostCardAdapter
+    
+    private val viewModel: ProfileViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startIndex = arguments?.getInt("startIndex", 0) ?: 0
         @Suppress("DEPRECATION")
-        posts = arguments?.getParcelableArrayList<PostModel>("posts") ?: emptyList()
+        posts = (arguments?.getParcelableArrayList<PostModel>("posts") ?: emptyList()).toMutableList()
     }
 
     override fun onCreateView(
@@ -48,9 +51,19 @@ class ProfilePostFeedFragment : Fragment() {
     }
 
     private fun setupFeed() {
-        val adapter = PostCardAdapter(
+        adapter = PostCardAdapter(
             onLikeClick = { post ->
-
+                viewModel.toggleLike(post.id, post.isLiked) { newLikedState, likeCountDelta ->
+                    // Update the post in the list
+                    val index = posts.indexOfFirst { it.id == post.id }
+                    if (index != -1) {
+                        posts[index] = posts[index].copy(
+                            isLiked = newLikedState,
+                            likeCount = posts[index].likeCount + likeCountDelta
+                        )
+                        adapter.submitList(posts.toList())
+                    }
+                }
             },
             onCommentClick = { post ->
                 CommentsBottomSheet
@@ -61,7 +74,7 @@ class ProfilePostFeedFragment : Fragment() {
 
         binding.profileFeedRv.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            this.adapter = adapter
+            this.adapter = this@ProfilePostFeedFragment.adapter
         }
 
         // Video focus for profile feed too

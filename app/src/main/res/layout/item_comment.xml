@@ -26,7 +26,7 @@
         android:textColor="@color/black"
         android:textSize="13sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@id/comment_like_block"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/comment_avatar"
         app:layout_constraintTop_toTopOf="@id/comment_avatar"
         tools:text="vibeteller" />
@@ -39,7 +39,7 @@
         android:layout_marginTop="2dp"
         android:textColor="@color/black"
         android:textSize="13sp"
-        app:layout_constraintEnd_toStartOf="@id/comment_like_block"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/comment_avatar"
         app:layout_constraintTop_toBottomOf="@id/comment_username"
         tools:text="This is such a beautiful shot! 🌸" />
@@ -52,36 +52,10 @@
         android:layout_marginTop="2dp"
         android:textColor="@color/gray"
         android:textSize="11sp"
-        app:layout_constraintEnd_toStartOf="@id/comment_like_block"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/comment_avatar"
         app:layout_constraintTop_toBottomOf="@id/comment_text"
         tools:text="2h ago" />
 
-    <!-- Heart + like count stacked on the right -->
-    <LinearLayout
-        android:id="@+id/comment_like_block"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageButton
-            android:id="@+id/comment_btn_like"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/post_card_ic_heart" />
-
-        <TextView
-            android:id="@+id/comment_like_number"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/gray"
-            android:textSize="10sp"
-            tools:text="24" />
-
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

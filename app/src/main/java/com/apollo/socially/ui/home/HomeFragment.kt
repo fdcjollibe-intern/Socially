@@ -70,6 +70,7 @@ class HomeFragment : Fragment() {
         observeStories()
         observeUploadState()
         observeStoryUpload()
+        observeNotificationBadge()
 
         binding.homeBtnNotifications.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_notifications)
@@ -97,12 +98,26 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun observeNotificationBadge() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val notificationRepo = com.apollo.socially.data.repository.NotificationRepository()
+            try {
+                val notifications = notificationRepo.getUserNotifications(limit = 50).getOrNull() ?: emptyList()
+                val hasUnread = notifications.any { !it.isRead }
+                binding.homeNotificationBadge.visibility = if (hasUnread) View.VISIBLE else View.GONE
+            } catch (_: Exception) {
+                // Ignore errors
+            }
+        }
+    }
+
+
     // ── Feed ──────────────────────────────────────────────────
 
     private fun setupFeed() {
         postAdapter = PostCardAdapter(
             onLikeClick = { post ->
-                // wire to like repository later
+                viewModel.toggleLike(post)
             },
             onCommentClick = { post ->
                 CommentsBottomSheet
@@ -157,6 +172,23 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+
+        // Observe spam warnings
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.showSpamWarning.collect { message ->
+                message?.let {
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Please wait")
+                        .setMessage(it)
+                        .setPositiveButton("OK") { dialog, _ ->
+                            dialog.dismiss()
+                            viewModel.clearSpamWarning()
+                        }
+                        .setCancelable(false)
+                        .show()
+                }
+            }
+        }
     }
 
     // ── Stories ───────────────────────────────────────────────
@@ -178,12 +210,14 @@ class HomeFragment : Fragment() {
             }
         )
 
-        binding.homeStoriesRv.apply {
-            layoutManager = LinearLayoutManager(
-                requireContext(), LinearLayoutManager.HORIZONTAL, false
-            )
-            adapter = storyAdapter
-        }
+//        binding.homeStoriesRv.apply {
+//            layoutManager = LinearLayoutManager(
+//                requireContext(), LinearLayoutManager.HORIZONTAL, false
+//            )
+//            adapter = storyAdapter
+//        }
+
+
     }
 
     private fun observeStories() {
@@ -228,6 +262,8 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         videoFocusManager.updateFocus()
+        // Refresh notification badge when returning to home
+        viewModel.checkUnreadNotifications()
     }
 
     override fun onDestroyView() {

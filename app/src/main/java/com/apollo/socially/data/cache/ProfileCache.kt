@@ -3,9 +3,6 @@ package com.apollo.socially.data.cache
 import com.apollo.socially.domain.model.Post
 import com.apollo.socially.domain.model.User
 
-/**
- * In-memory cache for profile data to avoid unnecessary reloads
- */
 object ProfileCache {
     
     private var cachedUser: User? = null

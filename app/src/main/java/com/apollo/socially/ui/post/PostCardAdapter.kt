@@ -285,12 +285,17 @@ class PostCardAdapter(
         }
 
         fun updateLikeButton(isLiked: Boolean) {
-            binding.postCardBtnLike.setColorFilter(
-                binding.root.context.getColor(
-                    if (isLiked) android.R.color.holo_red_light
-                    else android.R.color.white
+            if (isLiked) {
+                binding.postCardBtnLike.setImageResource(R.drawable.post_card_ic_heart_filled)
+                binding.postCardBtnLike.clearColorFilter()
+                // Ensure no tint is applied
+                binding.postCardBtnLike.imageTintList = null
+            } else {
+                binding.postCardBtnLike.setImageResource(R.drawable.post_card_ic_heart)
+                binding.postCardBtnLike.setColorFilter(
+                    binding.root.context.getColor(R.color.pink)
                 )
-            )
+            }
         }
 
         private fun updateMuteButton() {

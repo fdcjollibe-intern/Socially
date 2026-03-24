@@ -15,10 +15,17 @@ class PostRepository(
 ) {
 
     private val postsCollection = firestore.collection("posts")
-
+    private val notificationRepository = NotificationRepository(auth, firestore)
+    
+    // Spam prevention
+    private val likeToggleHistory = mutableMapOf<String, MutableList<Long>>()
+    private val cooldownPosts = mutableSetOf<String>()
+    
     companion object {
         const val PAGE_SIZE = 15
-        const val COMMENTS_PAGE_SIZE = 10
+        const val COMMENTS_PAGE_SIZE = 8
+        const val MAX_TOGGLES_PER_MINUTE = 3
+        const val COOLDOWN_DURATION_MS = 5000L // 5 seconds
     }
 
     data class PostPage(
@@ -79,16 +86,71 @@ class PostRepository(
 
     suspend fun toggleLike(postId: String, currentlyLiked: Boolean): Result<Boolean> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Not logged in")
+        
+        // Check if post is in cooldown
+        if (cooldownPosts.contains(postId)) {
+            error("Please wait before liking again")
+        }
+        
+        // Check spam prevention
+        val now = System.currentTimeMillis()
+        val history = likeToggleHistory.getOrPut(postId) { mutableListOf() }
+        
+        // Remove entries older than 1 minute
+        history.removeAll { now - it > 60_000 }
+        
+        // Check if exceeded max toggles
+        if (history.size >= MAX_TOGGLES_PER_MINUTE) {
+            // Put in cooldown
+            cooldownPosts.add(postId)
+            kotlinx.coroutines.delay(COOLDOWN_DURATION_MS)
+            cooldownPosts.remove(postId)
+            error("Too many toggles. Please wait 5 seconds before trying again.")
+        }
+        
+        // Add current toggle to history
+        history.add(now)
+        
         val likeRef = postsCollection.document(postId).collection("likes").document(uid)
         val postRef = postsCollection.document(postId)
 
         if (currentlyLiked) {
-            likeRef.delete().await()
-            postRef.update("likesCount", FieldValue.increment(-1)).await()
+            // Unlike - delete the like document
+            val likeDoc = likeRef.get().await()
+            if (likeDoc.exists()) {
+                likeRef.delete().await()
+                postRef.update("likesCount", FieldValue.increment(-1)).await()
+            }
+            
+            // Delete the notification
+            notificationRepository.deleteLikeNotification(postId)
+            
             false
         } else {
+            // Like - delete
+            val existingLike = likeRef.get().await()
+            if (existingLike.exists()) {
+                likeRef.delete().await()
+            }
+            
+            // Create new like document
             likeRef.set(mapOf("userId" to uid, "likedAt" to FieldValue.serverTimestamp())).await()
             postRef.update("likesCount", FieldValue.increment(1)).await()
+            
+            // Create notification
+            val postDoc = postRef.get().await()
+            val postOwnerId = postDoc.getString("userId") ?: ""
+            val thumbnailUrl = postDoc.get("mediaUrls")?.let { 
+                @Suppress("UNCHECKED_CAST")
+                (it as? List<String>)?.firstOrNull()
+            }
+            
+            notificationRepository.createLikeNotification(
+                postId = postId,
+                postOwnerId = postOwnerId,
+                postThumbnailUrl = thumbnailUrl
+            )
+            
             true
         }
     }
@@ -132,6 +194,22 @@ class PostRepository(
         val ref = postsCollection.document(postId).collection("comments").add(data).await()
         postsCollection.document(postId).update("commentsCount", FieldValue.increment(1)).await()
 
+        // Create notification
+        val postDoc = postsCollection.document(postId).get().await()
+        val postOwnerId = postDoc.getString("userId") ?: ""
+        val thumbnailUrl = postDoc.get("mediaUrls")?.let { 
+            @Suppress("UNCHECKED_CAST")
+            (it as? List<String>)?.firstOrNull()
+        }
+        
+        notificationRepository.createCommentNotification(
+            postId = postId,
+            postOwnerId = postOwnerId,
+            commentId = ref.id,
+            commentText = text,
+            postThumbnailUrl = thumbnailUrl
+        )
+
         Comment(
             id = ref.id,
             userId = uid,
@@ -139,5 +217,13 @@ class PostRepository(
             userAvatarUrl = avatarUrl,
             text = text
         )
+    }
+    
+    suspend fun deleteComment(postId: String, commentId: String): Result<Unit> = runCatching {
+        postsCollection.document(postId).collection("comments").document(commentId).delete().await()
+        postsCollection.document(postId).update("commentsCount", FieldValue.increment(-1)).await()
+        
+        // Delete the notification
+        notificationRepository.deleteCommentNotification(commentId)
     }
 }
